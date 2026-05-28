@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrat d'abonnement — Allo Tonte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:  #153d07;
+      --green:       #1e5c0a;
+      --green-light: #4a9e25;
+      --green-pale:  #e8f5e0;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-500:    #6b7280;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--gray-900);
+      background: var(--gray-100);
+      min-height: 100vh;
+      padding: 20px;
+      padding-top: 76px;
+    }
+
+    /* ── Navbar ── */
+    .navbar { position:fixed;top:0;left:0;right:0;height:56px;background:var(--green-dark);display:flex;align-items:center;padding:0 20px;gap:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3); }
+    .navbar-logo { height:34px;width:auto;background:#d0d0d0;border-radius:6px;padding:3px 8px;margin-right:10px; }
+    .nav-links { display:flex;align-items:center;gap:2px;flex:1; }
+    .nav-link { color:rgba(255,255,255,.65);font-size:.78rem;font-weight:600;text-decoration:none;padding:6px 10px;border-radius:6px;transition:all .15s;white-space:nowrap; }
+    .nav-link:hover { color:#fff;background:rgba(255,255,255,.1); }
+    .nav-link.active { color:#fff;background:rgba(255,255,255,.18); }
+    .nav-sep { width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px; }
+
+    /* ── Toolbar (masquée à l'impression) ── */
+    #toolbar {
+      max-width: 860px;
+      margin: 0 auto 18px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #toolbar h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green);
+      flex: 1;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-green  { background: var(--green); color: #fff; }
+    .btn-outline { background: #fff; color: var(--green); border: 1.5px solid var(--green); }
+    .btn-gray   { background: var(--gray-200); color: var(--gray-700); }
+
+    /* ── Page contrat ── */
+    #contrat {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 48px 52px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.1);
+    }
+
+    /* En-tête */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid var(--green);
+    }
+    .doc-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .doc-logo-icon {
+      width: 46px;
+      height: 46px;
+      background: var(--green);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .doc-logo-name {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      line-height: 1.1;
+    }
+    .doc-logo-sub {
+      font-size: .72rem;
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+    .doc-meta {
+      text-align: right;
+      font-size: .78rem;
+      color: var(--gray-500);
+      line-height: 1.8;
+    }
+    .doc-meta strong { color: var(--gray-900); }
+
+    /* Titre */
+    .doc-title {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .doc-title h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .doc-title p {
+      font-size: .8rem;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    /* Parties */
+    .parties-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .partie-box {
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .partie-box.prestataire { border-color: var(--green-light); background: var(--green-pale); }
+    .partie-lbl {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+    .partie-box.prestataire .partie-lbl { color: var(--green); }
+
+    /* Champs éditables */
+    .field-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: .8rem;
+    }
+    .field-row label {
+      flex-shrink: 0;
+      color: var(--gray-500);
+      min-width: 72px;
+      font-size: .75rem;
+    }
+    .field-val {
+      flex: 1;
+      border: none;
+      border-bottom: 1.5px solid var(--gray-300);
+      background: transparent;
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      padding: 1px 4px;
+      outline: none;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    .field-val:focus { border-bottom-color: var(--green); }
+    .field-val[readonly] { border-bottom-style: dashed; color: var(--gray-700); cursor: default; }
+
+    /* Sections */
+    .section {
+      margin-bottom: 22px;
+    }
+    .section-title {
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--green);
+      border-bottom: 2px solid var(--green-pale);
+      padding-bottom: 5px;
+      margin-bottom: 12px;
+    }
+    .section p, .section li {
+      font-size: .82rem;
+      line-height: 1.65;
+      color: var(--gray-700);
+    }
+    .section ul { padding-left: 20px; }
+    .section li { margin-bottom: 3px; }
+
+    /* Tableau prestations */
+    .prest-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .8rem;
+      margin-top: 8px;
+    }
+    .prest-table th {
+      background: var(--green-pale);
+      color: var(--green-dark);
+      font-weight: 700;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .prest-table th:last-child, .prest-table td:last-child { text-align: right; }
+    .prest-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: middle;
+    }
+    .prest-table tr:last-child td { border-bottom: none; }
+    .prest-table td input[type="text"],
+    .prest-table td input[type="number"] {
+      border: none;
+      border-bottom: 1.5px solid var(--gray-300);
+      background: transparent;
+      font-family: inherit;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      padding: 1px 2px;
+      outline: none;
+      width: 100%;
+    }
+    .prest-table td input[type="number"] { text-align: right; }
+    .prest-table td input:focus { border-bottom-color: var(--green); }
+    .prest-table tfoot td {
+      font-weight: 700;
+      color: var(--green-dark);
+      font-size: .85rem;
+      border-top: 2px solid var(--green-pale);
+      background: var(--green-pale);
+      padding: 10px;
+    }
+
+    /* Checkboxes options */
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 20px;
+      margin-top: 8px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .8rem;
+      color: var(--gray-700);
+    }
+    .check-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--green);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Durée / conditions */
+    .inline-field {
+      display: inline-block;
+      border: none;
+      border-bottom: 1.5px solid var(--gray-300);
+      background: transparent;
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      padding: 0 4px;
+      outline: none;
+      min-width: 80px;
+    }
+    .inline-field:focus { border-bottom-color: var(--green); }
+
+    /* Zone tarif récap */
+    .tarif-recap {
+      background: var(--green-pale);
+      border: 2px solid var(--green-light);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tarif-recap-lbl {
+      font-size: .78rem;
+      color: var(--green);
+      font-weight: 600;
+    }
+    .tarif-recap-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--green-dark);
+    }
+    .tarif-recap-sap {
+      font-size: .72rem;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+
+    /* Signatures */
+    .sig-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 8px;
+    }
+    .sig-box {
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .sig-lbl {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+    .sig-name {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+    .sig-date-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      color: var(--gray-500);
+      margin-bottom: 40px;
+    }
+    .sig-date-row input {
+      border: none;
+      border-bottom: 1.5px solid var(--gray-300);
+      background: transparent;
+      font-family: inherit;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      padding: 0 4px;
+      outline: none;
+      width: 110px;
+    }
+    .sig-date-row input:focus { border-bottom-color: var(--green); }
+    .sig-line {
+      border-top: 1.5px solid var(--gray-300);
+      margin-top: 4px;
+    }
+    .sig-mention {
+      font-size: .65rem;
+      color: var(--gray-400);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    /* Pied de page */
+    .doc-footer {
+      margin-top: 28px;
+      padding-top: 14px;
+      border-top: 1.5px solid var(--gray-200);
+      font-size: .68rem;
+      color: var(--gray-400);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    /* Bouton ajout ligne */
+    .btn-add-row {
+      margin-top: 8px;
+      background: none;
+      border: 1.5px dashed var(--gray-300);
+      color: var(--gray-500);
+      font-family: inherit;
+      font-size: .75rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-add-row:hover { border-color: var(--green); color: var(--green); }
+    .btn-del-row {
+      background: none;
+      border: none;
+      color: #c0392b;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 4px;
+      opacity: .6;
+    }
+    .btn-del-row:hover { opacity: 1; }
+
+    /* Print styles */
+    @media print {
+      body { background: #fff; padding: 0; }
+      #toolbar { display: none !important; }
+      #contrat {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+        padding: 24px 28px;
+      }
+      .btn-add-row, .btn-del-row { display: none !important; }
+      .field-val, .inline-field,
+      .prest-table td input { border-bottom-color: transparent !important; }
+      .check-item input[type="checkbox"] { accent-color: #000; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="clients.html"            class="nav-link">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link active">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link">🔧 Matériel</a>
+  </div>
+</nav>
+
+<!-- ── Barre d'outils ── -->
+<div id="toolbar">
+  <h1>✍️ Contrat d'abonnement</h1>
+  <button class="btn btn-gray" onclick="window.history.back()">← Retour</button>
+  <button class="btn btn-outline" onclick="newContrat()">🔄 Nouveau contrat vierge</button>
+  <button class="btn btn-green" onclick="window.print()">🖨 Imprimer / PDF</button>
+</div>
+
+<!-- ── Document ── -->
+<div id="contrat">
+
+  <!-- En-tête -->
+  <div class="doc-header">
+    <div class="doc-logo">
+      <img src="allotonte-removebg-preview.png" alt="Allo Tonte" style="height:64px;width:auto;">
+    </div>
+    <div class="doc-meta">
+      <div>Contrat n° <strong><input class="inline-field" id="num-contrat" style="min-width:100px;" value="" placeholder="AT-2026-001"></strong></div>
+      <div>Date : <strong><input class="inline-field" id="date-contrat" style="min-width:100px;"></strong></div>
+      <div id="header-siret"></div>
+      <div id="header-sap"></div>
+    </div>
+  </div>
+
+  <!-- Titre -->
+  <div class="doc-title">
+    <h2>Contrat d'abonnement entretien de jardin</h2>
+    <p>Contrat de prestation de services récurrents — <input class="inline-field" id="annee-contrat" style="min-width:60px;" placeholder="2026"></p>
+  </div>
+
+  <!-- Parties -->
+  <div class="parties-grid">
+    <!-- Prestataire -->
+    <div class="partie-box prestataire">
+      <div class="partie-lbl">Le prestataire</div>
+      <div class="field-row"><label>Nom :</label><input class="field-val" id="p-nom" readonly></div>
+      <div class="field-row"><label>Adresse :</label><input class="field-val" id="p-adresse" readonly></div>
+      <div class="field-row"><label>Tél. :</label><input class="field-val" id="p-tel" readonly></div>
+      <div class="field-row"><label>Email :</label><input class="field-val" id="p-email" readonly></div>
+      <div class="field-row"><label>SIRET :</label><input class="field-val" id="p-siret" readonly></div>
+    </div>
+    <!-- Client -->
+    <div class="partie-box">
+      <div class="partie-lbl">Le client</div>
+      <div class="field-row"><label>Nom :</label><input class="field-val" id="c-nom" placeholder="Prénom NOM"></div>
+      <div class="field-row"><label>Adresse :</label><input class="field-val" id="c-adresse" placeholder="N° rue, ville, CP"></div>
+      <div class="field-row"><label>Tél. :</label><input class="field-val" id="c-tel" placeholder="06 xx xx xx xx"></div>
+      <div class="field-row"><label>Email :</label><input class="field-val" id="c-email" placeholder="email@exemple.fr"></div>
+      <div class="field-row"><label>Superficie :</label><input class="field-val" id="c-superficie" placeholder="ex. 300 m²"></div>
+    </div>
+  </div>
+
+  <!-- Article 1 — Objet -->
+  <div class="section">
+    <div class="section-title">Article 1 — Objet du contrat</div>
+    <p>
+      Le présent contrat a pour objet la réalisation par le prestataire de prestations d'entretien de jardin au bénéfice du client,
+      selon les modalités définies ci-après. Ce contrat est conclu dans le cadre du service à la personne (SAP) agréé par l'État,
+      ouvrant droit à une réduction d'impôt de 50 % sur les sommes versées.
+    </p>
+  </div>
+
+  <!-- Article 2 — Prestations -->
+  <div class="section">
+    <div class="section-title">Article 2 — Prestations incluses</div>
+    <p style="margin-bottom:10px;">Les prestations suivantes sont incluses dans l'abonnement (cocher les cases applicables) :</p>
+    <div class="check-grid" id="prest-checks">
+      <label class="check-item"><input type="checkbox" checked> Tonte de pelouse</label>
+      <label class="check-item"><input type="checkbox"> Taille de haies</label>
+      <label class="check-item"><input type="checkbox"> Débroussaillage</label>
+      <label class="check-item"><input type="checkbox"> Ramassage de feuilles / soufflage</label>
+      <label class="check-item"><input type="checkbox"> Désherbage allées / bordures</label>
+      <label class="check-item"><input type="checkbox"> Nettoyage haute pression</label>
+      <label class="check-item"><input type="checkbox"> Évacuation des déchets verts</label>
+      <label class="check-item"><input type="checkbox"> Autre : <input type="text" style="border:none;border-bottom:1px solid #ccc;font-size:.8rem;width:120px;outline:none;margin-left:4px;"></label>
+    </div>
+    <p style="margin-top:12px;">
+      <strong>Nombre de passages inclus :</strong>
+      <input class="inline-field" id="nb-passages" placeholder="8" style="min-width:40px;">
+      passages par an (soit environ <input class="inline-field" id="freq-passages" placeholder="toutes les 4 semaines" style="min-width:140px;">).
+    </p>
+    <p style="margin-top:6px;">
+      <strong>Plage horaire indicative :</strong>
+      <input class="inline-field" placeholder="08h00 – 18h00" style="min-width:120px;">,
+      du lundi au samedi. Les dates d'intervention seront convenues mutuellement.
+    </p>
+  </div>
+
+  <!-- Article 3 — Tarifs -->
+  <div class="section">
+    <div class="section-title">Article 3 — Tarifs et modalités de paiement</div>
+
+    <table class="prest-table" id="tarif-table">
+      <thead>
+        <tr>
+          <th style="width:45%">Prestation</th>
+          <th style="width:15%;text-align:center;">Qté</th>
+          <th style="width:18%;text-align:right;">P.U. (€)</th>
+          <th style="width:18%;text-align:right;">Total (€)</th>
+          <th style="width:4%;"></th>
+        </tr>
+      </thead>
+      <tbody id="tarif-tbody">
+        <!-- lignes générées dynamiquement -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="text-align:right;">Total abonnement annuel</td>
+          <td id="total-ttc">0,00 €</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button class="btn-add-row" onclick="addTarifRow()">+ Ajouter une ligne</button>
+
+    <div class="tarif-recap" id="tarif-recap">
+      <div>
+        <div class="tarif-recap-lbl">Montant annuel toutes prestations</div>
+        <div class="tarif-recap-sap" id="recap-sap-detail"></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="tarif-recap-val" id="recap-total">0,00 €</div>
+        <div class="tarif-recap-sap">soit <span id="recap-mensuel">0,00 €</span> / mois</div>
+      </div>
+    </div>
+
+    <p style="margin-top:12px;">
+      <strong>Modalité de paiement :</strong>
+      <label class="check-item" style="display:inline-flex;gap:6px;margin:0 12px;"><input type="checkbox" checked> Par passage (chèque / virement / espèces)</label>
+      <label class="check-item" style="display:inline-flex;gap:6px;margin:0 12px;"><input type="checkbox"> Mensuel (prélèvement / virement)</label>
+      <label class="check-item" style="display:inline-flex;gap:6px;margin:0 12px;"><input type="checkbox"> En début de saison</label>
+    </p>
+    <p style="margin-top:8px;">
+      Le client bénéficie d'une <strong>réduction fiscale de 50 %</strong> sur les sommes réellement versées (dans la limite des plafonds légaux en vigueur),
+      sous réserve de son éligibilité au crédit d'impôt pour l'emploi d'un salarié à domicile. Une attestation fiscale annuelle lui sera délivrée.
+    </p>
+  </div>
+
+  <!-- Article 4 — Durée -->
+  <div class="section">
+    <div class="section-title">Article 4 — Durée et renouvellement</div>
+    <p>
+      Le contrat est conclu pour une durée de <input class="inline-field" placeholder="1 an" style="min-width:60px;">,
+      à compter du <input class="inline-field" id="date-debut" style="min-width:100px;" placeholder="jj/mm/aaaa">
+      jusqu'au <input class="inline-field" id="date-fin" style="min-width:100px;" placeholder="jj/mm/aaaa">.
+    </p>
+    <p style="margin-top:8px;">
+      À l'échéance, il se renouvelle tacitement par période d'un an, sauf résiliation notifiée par l'une ou l'autre partie
+      au moins <strong>30 jours</strong> avant le terme, par tout moyen permettant d'en accuser réception.
+    </p>
+  </div>
+
+  <!-- Article 5 — Résiliation -->
+  <div class="section">
+    <div class="section-title">Article 5 — Résiliation</div>
+    <p>
+      Chaque partie peut résilier le présent contrat à tout moment, sous réserve d'un préavis de <strong>15 jours</strong>
+      par lettre recommandée avec avis de réception ou par email avec accusé de réception.
+      En cas d'inexécution grave des obligations contractuelles, la résiliation est immédiate et de plein droit.
+    </p>
+    <p style="margin-top:8px;">
+      Les passages déjà effectués restent dus. En cas de résiliation anticipée à l'initiative du client, les passages non effectués
+      compris dans un forfait déjà payé sont remboursés au prorata.
+    </p>
+  </div>
+
+  <!-- Article 6 — Obligations -->
+  <div class="section">
+    <div class="section-title">Article 6 — Obligations des parties</div>
+    <p><strong>Le prestataire s'engage à :</strong></p>
+    <ul style="margin:6px 0 10px;">
+      <li>Réaliser les prestations avec soin, selon les règles de l'art et dans les délais convenus.</li>
+      <li>Informer le client de tout problème constaté lors des interventions.</li>
+      <li>Disposer d'une assurance responsabilité civile professionnelle en cours de validité.</li>
+    </ul>
+    <p><strong>Le client s'engage à :</strong></p>
+    <ul style="margin:6px 0 0;">
+      <li>Permettre l'accès au jardin aux jours et heures convenus.</li>
+      <li>Signaler toute contrainte ou particularité (fosse septique, réseau enterré, animaux…).</li>
+      <li>Régler les factures dans un délai de <strong>15 jours</strong> à réception.</li>
+    </ul>
+  </div>
+
+  <!-- Article 7 — Divers -->
+  <div class="section">
+    <div class="section-title">Article 7 — Dispositions diverses</div>
+    <p>
+      En cas de mauvaises conditions météorologiques (gel, forte pluie, sécheresse prolongée) rendant l'intervention impossible ou inadaptée,
+      le prestataire se réserve le droit de reporter le passage, sans pénalité et en accord avec le client.
+    </p>
+    <p style="margin-top:8px;">
+      Tout litige relatif au présent contrat sera soumis à une tentative de résolution amiable préalable.
+      À défaut d'accord, le tribunal compétent sera celui du domicile du prestataire.
+      Le présent contrat est soumis au droit français.
+    </p>
+  </div>
+
+  <!-- Article 8 — Signatures -->
+  <div class="section">
+    <div class="section-title">Article 8 — Signatures</div>
+    <p style="margin-bottom:12px;font-size:.78rem;color:var(--gray-500);">
+      Fait en deux exemplaires originaux, dont un remis à chaque partie. Précédée de la mention manuscrite
+      <em>« Lu et approuvé, bon pour accord »</em>.
+    </p>
+    <div class="sig-grid">
+      <div class="sig-box">
+        <div class="sig-lbl">Le prestataire</div>
+        <div class="sig-name" id="sig-nom-prest">—</div>
+        <div class="sig-date-row">À <input placeholder="Hermonville">, le <input id="sig-date"></div>
+        <div class="sig-line"></div>
+        <div class="sig-mention">Signature précédée de la mention manuscrite</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-lbl">Le client</div>
+        <div class="sig-name" id="sig-nom-client">—</div>
+        <div class="sig-date-row">À <input placeholder="Ville">, le <input></div>
+        <div class="sig-line"></div>
+        <div class="sig-mention">Signature précédée de la mention manuscrite</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="doc-footer" id="doc-footer">
+    <!-- rempli par JS -->
+  </div>
+
+</div><!-- /#contrat -->
+
+<script>
+/* ════════ Données depuis localStorage (planning.html) ════════ */
+const settings = JSON.parse(localStorage.getItem('at-settings') || '{}');
+
+function init() {
+  const nom     = settings.nom     || 'Allo Tonte';
+  const adresse = settings.adresse || 'Hermonville 51220';
+  const tel     = settings.tel     || '07 56 95 15 66';
+  const email   = settings.email   || 'allotonte@gmail.com';
+  const siret   = settings.siret   || '';
+  const sap     = settings.sap     || '';
+  const iban    = settings.iban    || '';
+
+  // En-tête
+  if (siret) document.getElementById('header-siret').innerHTML = `SIRET : <strong>${siret}</strong>`;
+  if (sap)   document.getElementById('header-sap').innerHTML   = `N° agrément SAP : <strong>${sap}</strong>`;
+
+  // Prestataire (readonly — modifiable dans ⚙ Paramètres)
+  document.getElementById('p-nom').value     = nom;
+  document.getElementById('p-adresse').value = adresse;
+  document.getElementById('p-tel').value     = tel;
+  document.getElementById('p-email').value   = email;
+  document.getElementById('p-siret').value   = siret;
+
+  // Signature prestataire
+  document.getElementById('sig-nom-prest').textContent = nom;
+
+  // Numéro de contrat auto
+  const n = (parseInt(localStorage.getItem('at-contrat-counter') || '0') + 1);
+  const yy = new Date().getFullYear();
+  document.getElementById('num-contrat').value = `AT-${yy}-${String(n).padStart(3,'0')}`;
+
+  // Date du jour
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const dateStr = `${dd}/${mm}/${yyyy}`;
+  document.getElementById('date-contrat').value = dateStr;
+  document.getElementById('annee-contrat').value = yyyy;
+  document.getElementById('sig-date').value = dateStr;
+
+  // Dates début/fin (1 jan → 31 déc)
+  document.getElementById('date-debut').value = `01/01/${yyyy}`;
+  document.getElementById('date-fin').value   = `31/12/${yyyy}`;
+
+  // Pied de page
+  document.getElementById('doc-footer').innerHTML =
+    `${nom} — ${adresse}${tel ? ' — ' + tel : ''}${email ? ' — ' + email : ''}` +
+    `${siret ? ' — SIRET : ' + siret : ''}${sap ? ' — Agrément SAP : ' + sap : ''}` +
+    `${iban ? '<br>IBAN : ' + iban : ''}`;
+
+  // Ligne prestation par défaut
+  addTarifRow('Entretien jardin — abonnement annuel', 8, 34);
+  updateTotals();
+
+  // Recap SAP
+  if (sap) {
+    document.getElementById('recap-sap-detail').textContent =
+      'Éligible réduction d\'impôt 50 % (Agrément SAP n° ' + sap + ')';
+  }
+}
+
+/* ════════ Tableau des tarifs ════════ */
+let rowIdx = 0;
+
+function addTarifRow(desc = '', qty = 1, pu = 0) {
+  rowIdx++;
+  const id = rowIdx;
+  const tr = document.createElement('tr');
+  tr.id = 'tr-' + id;
+  tr.innerHTML = `
+    <td><input type="text"   value="${desc}" placeholder="Description de la prestation" oninput="updateTotals()"></td>
+    <td style="text-align:center;"><input type="number" value="${qty}"  min="1"  style="width:50px;text-align:center;" oninput="updateTotals()"></td>
+    <td><input type="number" value="${pu}"   min="0" step="0.01" style="width:70px;" oninput="updateTotals()"></td>
+    <td id="row-total-${id}" style="text-align:right;font-weight:700;">0,00 €</td>
+    <td><button class="btn-del-row" onclick="delRow(${id})" title="Supprimer">×</button></td>
+  `;
+  document.getElementById('tarif-tbody').appendChild(tr);
+  updateTotals();
+}
+
+function delRow(id) {
+  const tr = document.getElementById('tr-' + id);
+  if (tr) tr.remove();
+  updateTotals();
+}
+
+function updateTotals() {
+  let total = 0;
+  document.querySelectorAll('#tarif-tbody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input[type="number"]');
+    if (inputs.length < 2) return;
+    const qty = parseFloat(inputs[0].value) || 0;
+    const pu  = parseFloat(inputs[1].value) || 0;
+    const rowTotal = qty * pu;
+    total += rowTotal;
+    const id = tr.id.replace('tr-', '');
+    const cell = document.getElementById('row-total-' + id);
+    if (cell) cell.textContent = fmtEur(rowTotal);
+  });
+  document.getElementById('total-ttc').textContent  = fmtEur(total);
+  document.getElementById('recap-total').textContent = fmtEur(total);
+  const mensuel = total / 12;
+  document.getElementById('recap-mensuel').textContent = fmtEur(mensuel);
+}
+
+function fmtEur(n) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+/* ════════ Nouveau contrat vierge ════════ */
+function newContrat() {
+  if (!confirm('Créer un nouveau contrat vierge ? Les données non enregistrées seront perdues.')) return;
+  // Incrémenter compteur
+  const n = (parseInt(localStorage.getItem('at-contrat-counter') || '0') + 1);
+  localStorage.setItem('at-contrat-counter', n);
+  location.reload();
+}
+
+/* ════════ Mise à jour du nom client dans signature ════════ */
+document.addEventListener('input', e => {
+  if (e.target.id === 'c-nom') {
+    document.getElementById('sig-nom-client').textContent = e.target.value || '—';
+  }
+});
+
+init();
+</script>
+
+</body>
+</html>

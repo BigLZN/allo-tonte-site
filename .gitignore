@@ -1,0 +1,9 @@
+# Sauvegardes locales auto-générées
+Sauvegarde/
+
+# Fichiers système Windows
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/

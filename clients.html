@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allo Tonte — Clients</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-dark:  #153d07;
+      --green:       #1e5c0a;
+      --green-light: #4a9e25;
+      --green-pale:  #e8f5e0;
+      --red:         #c0392b;
+      --red-pale:    #fde8e7;
+      --blue:        #2563eb;
+      --blue-pale:   #eff6ff;
+      --orange:      #ea6c00;
+      --orange-pale: #fff3e0;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-400:    #9ca3af;
+      --gray-500:    #6b7280;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+      --radius:      10px;
+      --shadow:      0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    }
+    body { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--gray-900); background: var(--gray-100); min-height: 100vh; }
+
+    /* Navbar */
+    .navbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--green-dark); display: flex; align-items: center; padding: 0 24px; gap: 14px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    .navbar-logo { height: 34px; width: auto; background: #d0d0d0; border-radius: 6px; padding: 3px 8px; }
+    .navbar-title { color: white; font-weight: 700; font-size: .9rem; opacity: .75; }
+    .navbar-spacer { flex: 1; }
+    .navbar-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: white; border-radius: 8px; padding: 7px 14px; font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .navbar-btn:hover { background: rgba(255,255,255,.2); }
+    .navbar-link { color: rgba(255,255,255,.65); font-size: .8rem; text-decoration: none; transition: color .15s; }
+    .navbar-link:hover { color: white; }
+    .nav-links { display:flex;align-items:center;gap:2px;flex:1; }
+    .nav-link { color:rgba(255,255,255,.65);font-size:.78rem;font-weight:600;text-decoration:none;padding:6px 10px;border-radius:6px;transition:all .15s;white-space:nowrap; }
+    .nav-link:hover { color:#fff;background:rgba(255,255,255,.1); }
+    .nav-link.active { color:#fff;background:rgba(255,255,255,.18); }
+    .nav-sep { width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px; }
+
+    /* Layout */
+    .main { margin-top: 56px; padding: 28px 24px; max-width: 1240px; margin-left: auto; margin-right: auto; }
+
+    /* Header */
+    .page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 800; flex: 1; }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); }
+    .stat-lbl { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin-bottom: 5px; }
+    .stat-val { font-size: 1.55rem; font-weight: 900; color: var(--gray-900); }
+    .stat-sub { font-size: .72rem; color: var(--gray-500); margin-top: 2px; }
+
+    /* Search */
+    .search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    .search-input { border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 9px 14px; font-family: inherit; font-size: .88rem; width: 320px; max-width: 100%; transition: border-color .15s; background: var(--white); }
+    .search-input:focus { outline: none; border-color: var(--green-light); }
+    .sort-select { border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 9px 14px; font-family: inherit; font-size: .82rem; background: var(--white); cursor: pointer; }
+    .sort-select:focus { outline: none; border-color: var(--green-light); }
+
+    /* Client grid */
+    .clients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .client-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; cursor: pointer; transition: all .15s; }
+    .client-card:hover { border-color: var(--green-light); box-shadow: 0 4px 14px rgba(0,0,0,.1); transform: translateY(-1px); }
+    .client-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    .client-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--green-pale); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; color: var(--green-dark); flex-shrink: 0; text-transform: uppercase; }
+    .client-name { font-size: 1rem; font-weight: 800; color: var(--gray-900); margin-bottom: 2px; }
+    .client-contact { font-size: .78rem; color: var(--gray-500); line-height: 1.6; }
+    .client-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--gray-100); padding-top: 12px; }
+    .client-stat { text-align: center; }
+    .client-stat-val { font-size: 1.05rem; font-weight: 800; color: var(--gray-900); }
+    .client-stat-lbl { font-size: .62rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); margin-top: 1px; }
+    .client-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+    .client-tag { font-size: .62rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: .04em; }
+    .tag-devis { background: var(--blue-pale); color: var(--blue); }
+    .tag-intervention { background: var(--green-pale); color: var(--green); }
+    .tag-facture { background: #f3f0ff; color: #7c3aed; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    /* Modal */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--white); border-radius: 14px; width: 780px; max-width: 96vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.22); transform: translateY(12px); transition: transform .2s; }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal-head { display: flex; align-items: center; gap: 12px; padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; background: white; z-index: 1; }
+    .modal-head h2 { font-size: 1.1rem; font-weight: 800; flex: 1; }
+    .modal-close { background: var(--gray-100); border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray-500); transition: all .15s; }
+    .modal-close:hover { background: var(--gray-200); color: var(--gray-900); }
+    .modal-body { padding: 20px 24px 24px; }
+
+    /* Client detail */
+    .client-detail-header { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
+    .client-detail-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--green-pale); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: var(--green-dark); flex-shrink: 0; text-transform: uppercase; }
+    .client-detail-info { flex: 1; min-width: 0; }
+    .client-detail-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+    .client-detail-meta { font-size: .82rem; color: var(--gray-500); line-height: 1.8; }
+    .client-detail-meta a { color: var(--blue); text-decoration: none; }
+    .client-detail-meta a:hover { text-decoration: underline; }
+    .client-detail-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .detail-stat { text-align: center; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 10px 16px; min-width: 80px; }
+    .detail-stat-val { font-size: 1.2rem; font-weight: 900; }
+    .detail-stat-lbl { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); margin-top: 2px; }
+
+    /* Timeline */
+    .timeline-section { margin-bottom: 18px; }
+    .timeline-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-100); }
+    .timeline-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--gray-50); align-items: flex-start; }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .9rem; flex-shrink: 0; margin-top: 2px; }
+    .timeline-icon.devis       { background: var(--blue-pale); }
+    .timeline-icon.intervention{ background: var(--green-pale); }
+    .timeline-icon.facture     { background: #f3f0ff; }
+    .timeline-content { flex: 1; min-width: 0; }
+    .timeline-label { font-weight: 700; font-size: .88rem; margin-bottom: 2px; }
+    .timeline-date  { font-size: .75rem; color: var(--gray-500); margin-bottom: 3px; }
+    .timeline-detail{ font-size: .78rem; color: var(--gray-500); }
+    .timeline-amount{ font-weight: 800; font-size: .9rem; color: var(--gray-700); flex-shrink: 0; }
+    .timeline-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .tl-brouillon { background: var(--gray-100); color: var(--gray-500); }
+    .tl-envoyé    { background: var(--blue-pale); color: var(--blue); }
+    .tl-accepté   { background: var(--green-pale); color: var(--green); }
+    .tl-refusé    { background: var(--red-pale); color: var(--red); }
+    .tl-planifie  { background: var(--blue-pale); color: var(--blue); }
+    .tl-en-cours  { background: var(--orange-pale); color: var(--orange); }
+    .tl-termine   { background: var(--green-pale); color: var(--green); }
+    .tl-annule    { background: var(--gray-100); color: var(--gray-500); }
+    .tl-brouillon2{ background: var(--gray-100); color: var(--gray-500); }
+    .tl-envoyee   { background: var(--blue-pale); color: var(--blue); }
+    .tl-payee     { background: var(--green-pale); color: var(--green); }
+
+    /* Buttons */
+    .btn { border: none; border-radius: 8px; padding: 9px 16px; font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .btn-primary   { background: var(--green); color: white; }
+    .btn-primary:hover   { background: var(--green-dark); }
+    .btn-secondary { background: var(--white); color: var(--gray-700); border: 1.5px solid var(--gray-200); }
+    .btn-secondary:hover { background: var(--gray-50); }
+    .btn-sm { padding: 6px 11px; font-size: .78rem; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--gray-900); color: white; padding: 10px 22px; border-radius: 99px; font-size: .82rem; font-weight: 600; opacity: 0; transition: all .3s; z-index: 400; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .clients-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="clients.html"            class="nav-link active">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link">🔧 Matériel</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-header">
+    <h1>👥 Mes clients</h1>
+    <button class="btn btn-secondary btn-sm" onclick="exportClientsCSV()">⬇ Exporter CSV</button>
+  </div>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="search-bar">
+    <input type="text" class="search-input" id="search-input" placeholder="🔍 Rechercher un client…" oninput="renderClients()">
+    <select class="sort-select" id="sort-select" onchange="renderClients()">
+      <option value="nom">Trier par nom</option>
+      <option value="ca">Trier par CA</option>
+      <option value="recent">Trier par date récente</option>
+      <option value="interventions">Trier par nb interventions</option>
+    </select>
+  </div>
+
+  <div class="clients-grid" id="clients-grid"></div>
+</div>
+
+<!-- Modal client -->
+<div class="overlay" id="overlay-client">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modal-client-name"></h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-client-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Data loading ── */
+const devisList     = JSON.parse(localStorage.getItem('at-devis')         || '[]');
+const interventions = JSON.parse(localStorage.getItem('at-interventions') || '[]');
+const factures      = JSON.parse(localStorage.getItem('at-factures')      || '[]');
+
+/* ── Helpers ── */
+function fmt(n)    { return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u202f€'; }
+function today()   { return new Date().toISOString().slice(0, 10); }
+function fmtDate(s){ if (!s) return '—'; const [y,m,d] = s.split('-'); return `${d}/${m}/${y}`; }
+function esc(s)    { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function initials(p, n) { return ((p||'?').charAt(0) + (n||'?').charAt(0)).toUpperCase(); }
+function showToast(msg, ms = 2600) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+const STATUS_DEV = { brouillon:'Brouillon', 'envoyé':'Envoyé', 'accepté':'Accepté', 'refusé':'Refusé' };
+const STATUS_INT = { planifie:'Planifié', 'en-cours':'En cours', termine:'Terminé', annule:'Annulé' };
+const STATUS_FAC = { brouillon:'Brouillon', envoyee:'Envoyée', payee:'Payée' };
+
+/* ── Build client list ── */
+function normalizeKey(prenom, nom) {
+  return `${(prenom || '').trim().toLowerCase()}|${(nom || '').trim().toLowerCase()}`;
+}
+
+function buildClients() {
+  const map = {};
+
+  devisList.forEach(d => {
+    const k = normalizeKey(d.client.prenom, d.client.nom);
+    if (!k || k === '|') return;
+    if (!map[k]) map[k] = { prenom: d.client.prenom, nom: d.client.nom, contact: {}, devis: [], interventions: [], factures: [], lastDate: '' };
+    const c = map[k];
+    if (d.client.email && !c.contact.email) c.contact.email = d.client.email;
+    if (d.client.tel   && !c.contact.tel)   c.contact.tel   = d.client.tel;
+    if (d.client.adresse && !c.contact.adresse) c.contact.adresse = d.client.adresse;
+    if (d.client.ville && !c.contact.ville) c.contact.ville = d.client.ville;
+    c.devis.push(d);
+    if (d.date > c.lastDate) c.lastDate = d.date;
+  });
+
+  interventions.forEach(i => {
+    const k = normalizeKey(i.client.prenom, i.client.nom);
+    if (!k || k === '|') return;
+    if (!map[k]) map[k] = { prenom: i.client.prenom, nom: i.client.nom, contact: {}, devis: [], interventions: [], factures: [], lastDate: '' };
+    const c = map[k];
+    if (i.client.email && !c.contact.email) c.contact.email = i.client.email;
+    if (i.client.tel   && !c.contact.tel)   c.contact.tel   = i.client.tel;
+    if (i.client.adresse && !c.contact.adresse) c.contact.adresse = i.client.adresse;
+    c.interventions.push(i);
+    if (i.date > c.lastDate) c.lastDate = i.date;
+  });
+
+  factures.forEach(f => {
+    const k = normalizeKey(f.client.prenom, f.client.nom);
+    if (!k || k === '|') return;
+    if (!map[k]) return; // factures toujours liées à une intervention
+    const c = map[k];
+    c.factures.push(f);
+  });
+
+  return Object.values(map).map(c => {
+    c.ca        = c.devis.filter(d => d.status === 'accepté').reduce((s, d) => s + (d.total || 0), 0);
+    c.caFacture = c.factures.filter(f => f.status === 'payee').reduce((s, f) => s + (f.total || 0), 0);
+    return c;
+  });
+}
+
+let allClients = buildClients();
+
+/* ── Stats ── */
+function renderStats() {
+  const total = allClients.length;
+  const caTotal = allClients.reduce((s, c) => s + c.ca, 0);
+  const withInts = allClients.filter(c => c.interventions.length > 0).length;
+  const caEnc = allClients.reduce((s, c) => s + c.caFacture, 0);
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Clients</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card"><div class="stat-lbl">CA accepté (devis)</div><div class="stat-val">${fmt(caTotal)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">CA encaissé (factures)</div><div class="stat-val">${fmt(caEnc)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Avec interventions</div><div class="stat-val">${withInts}</div><div class="stat-sub">clients actifs</div></div>`;
+}
+
+/* ── Render client cards ── */
+function renderClients() {
+  const q    = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const sort = document.getElementById('sort-select')?.value || 'nom';
+
+  let list = allClients.filter(c =>
+    `${c.prenom} ${c.nom}`.toLowerCase().includes(q) ||
+    (c.contact.email  || '').toLowerCase().includes(q) ||
+    (c.contact.ville  || '').toLowerCase().includes(q) ||
+    (c.contact.adresse|| '').toLowerCase().includes(q)
+  );
+
+  if (sort === 'nom')          list.sort((a, b) => `${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`));
+  else if (sort === 'ca')      list.sort((a, b) => b.ca - a.ca);
+  else if (sort === 'recent')  list.sort((a, b) => (b.lastDate || '').localeCompare(a.lastDate || ''));
+  else if (sort === 'interventions') list.sort((a, b) => b.interventions.length - a.interventions.length);
+
+  const grid = document.getElementById('clients-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">👥</div><p>Aucun client trouvé.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(c => {
+    const tags = [
+      c.devis.length ? `<span class="client-tag tag-devis">${c.devis.length} devis</span>` : '',
+      c.interventions.length ? `<span class="client-tag tag-intervention">${c.interventions.length} intervention${c.interventions.length > 1 ? 's' : ''}</span>` : '',
+      c.factures.length ? `<span class="client-tag tag-facture">${c.factures.length} facture${c.factures.length > 1 ? 's' : ''}</span>` : '',
+    ].filter(Boolean).join('');
+    return `<div class="client-card" onclick="openClient('${esc(c.prenom)}','${esc(c.nom)}')">
+      <div class="client-card-head">
+        <div class="client-avatar">${initials(c.prenom, c.nom)}</div>
+        <div>
+          <div class="client-name">${esc(c.prenom)} ${esc(c.nom)}</div>
+          <div class="client-contact">
+            ${c.contact.adresse ? esc(c.contact.adresse) + (c.contact.ville ? ', ' + esc(c.contact.ville) : '') + '<br>' : ''}
+            ${c.contact.tel ? '📞 ' + esc(c.contact.tel) + '<br>' : ''}
+            ${c.contact.email ? '✉ ' + esc(c.contact.email) : ''}
+          </div>
+        </div>
+      </div>
+      <div class="client-stats">
+        <div class="client-stat"><div class="client-stat-val">${fmt(c.ca).replace('\u202f€', '€')}</div><div class="client-stat-lbl">CA</div></div>
+        <div class="client-stat"><div class="client-stat-val">${c.interventions.filter(i => i.status !== 'annule').length}</div><div class="client-stat-lbl">Passages</div></div>
+        <div class="client-stat"><div class="client-stat-val">${c.factures.filter(f => f.status === 'payee').length}</div><div class="client-stat-lbl">Payées</div></div>
+      </div>
+      <div class="client-tags">${tags}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Client detail modal ── */
+function openClient(prenom, nom) {
+  const c = allClients.find(x => x.prenom === prenom && x.nom === nom);
+  if (!c) return;
+
+  document.getElementById('modal-client-name').textContent = `${c.prenom} ${c.nom}`;
+
+  // Build timeline (all events sorted by date desc)
+  const events = [
+    ...c.devis.map(d => ({ type: 'devis', date: d.date || '', obj: d })),
+    ...c.interventions.map(i => ({ type: 'intervention', date: i.date || '', obj: i })),
+    ...c.factures.map(f => ({ type: 'facture', date: f.date || '', obj: f })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+
+  const detailStats = [
+    { val: fmt(c.ca).replace('\u202f€', '€'), lbl: 'CA accepté' },
+    { val: fmt(c.caFacture).replace('\u202f€', '€'), lbl: 'Encaissé' },
+    { val: String(c.devis.length), lbl: 'Devis' },
+    { val: String(c.interventions.filter(i => i.status !== 'annule').length), lbl: 'Passages' },
+    { val: String(c.factures.filter(f => f.status === 'payee').length), lbl: 'Factures payées' },
+  ];
+
+  const statsHtml = `<div class="client-detail-stats">${detailStats.map(s =>
+    `<div class="detail-stat"><div class="detail-stat-val">${s.val}</div><div class="detail-stat-lbl">${s.lbl}</div></div>`
+  ).join('')}</div>`;
+
+  const mapsUrl = c.contact.adresse ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((c.contact.adresse || '') + ' ' + (c.contact.ville || ''))}` : '';
+
+  const headerHtml = `<div class="client-detail-header">
+    <div class="client-detail-avatar">${initials(c.prenom, c.nom)}</div>
+    <div class="client-detail-info">
+      <div class="client-detail-name">${esc(c.prenom)} ${esc(c.nom)}</div>
+      <div class="client-detail-meta">
+        ${c.contact.adresse ? `${mapsUrl ? `<a href="${mapsUrl}" target="_blank" rel="noopener">📍 ${esc(c.contact.adresse)}${c.contact.ville ? ', ' + esc(c.contact.ville) : ''}</a>` : esc(c.contact.adresse)}<br>` : ''}
+        ${c.contact.tel   ? `📞 <a href="tel:${esc(c.contact.tel)}">${esc(c.contact.tel)}</a><br>` : ''}
+        ${c.contact.email ? `✉ <a href="mailto:${esc(c.contact.email)}">${esc(c.contact.email)}</a>` : ''}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${c.contact.email ? `<a href="mailto:${esc(c.contact.email)}" class="btn btn-secondary btn-sm">📧 Email</a>` : ''}
+      ${c.contact.tel   ? `<a href="tel:${esc(c.contact.tel)}"   class="btn btn-secondary btn-sm">📞 Appeler</a>` : ''}
+    </div>
+  </div>
+  ${statsHtml}`;
+
+  // Timeline items
+  const timelineHtml = events.length === 0
+    ? `<div style="text-align:center;padding:30px 0;color:var(--gray-400);">Aucun historique.</div>`
+    : events.map(ev => {
+      if (ev.type === 'devis') {
+        const d = ev.obj;
+        return `<div class="timeline-item">
+          <div class="timeline-icon devis">📋</div>
+          <div class="timeline-content">
+            <div class="timeline-label">Devis ${d.id} <span class="timeline-badge tl-${d.status}">${STATUS_DEV[d.status]||d.status}</span></div>
+            <div class="timeline-date">${fmtDate(d.date)}${d.superficie ? ` · ${esc(d.superficie)}` : ''}</div>
+            <div class="timeline-detail">${d.lignes && d.lignes.length ? esc(d.lignes[0].desc) + (d.lignes.length > 1 ? ` +${d.lignes.length - 1} prestation(s)` : '') : '—'}</div>
+          </div>
+          <div class="timeline-amount">${fmt(d.total || 0)}</div>
+        </div>`;
+      }
+      if (ev.type === 'intervention') {
+        const i = ev.obj;
+        return `<div class="timeline-item">
+          <div class="timeline-icon intervention">🌿</div>
+          <div class="timeline-content">
+            <div class="timeline-label">Intervention ${i.id} <span class="timeline-badge tl-${i.status||'planifie'}">${STATUS_INT[i.status||'planifie']}</span></div>
+            <div class="timeline-date">${fmtDate(i.date)}${i.heure ? ` à ${i.heure}` : ''}${i.duree ? ` · ${Math.floor(i.duree/60)||''}${i.duree%60?'h'+String(i.duree%60).padStart(2,'0'):'h'}` : ''}</div>
+            <div class="timeline-detail">${i.lignes && i.lignes.length ? esc(i.lignes[0].desc) + (i.lignes.length > 1 ? ` +${i.lignes.length - 1}` : '') : '—'}${i.superficie ? ` · ${esc(i.superficie)}` : ''}</div>
+          </div>
+          <div class="timeline-amount">${fmt(i.total || 0)}</div>
+        </div>`;
+      }
+      if (ev.type === 'facture') {
+        const f = ev.obj;
+        return `<div class="timeline-item">
+          <div class="timeline-icon facture">🧾</div>
+          <div class="timeline-content">
+            <div class="timeline-label">Facture ${f.id} <span class="timeline-badge tl-${f.status||'brouillon'}">${STATUS_FAC[f.status||'brouillon']}</span></div>
+            <div class="timeline-date">${fmtDate(f.date)}${f.echeance ? ` · échéance ${fmtDate(f.echeance)}` : ''}</div>
+            <div class="timeline-detail">${f.sap ? `Net SAP : ${fmt((f.total||0)/2)}` : ''}</div>
+          </div>
+          <div class="timeline-amount">${fmt(f.total || 0)}</div>
+        </div>`;
+      }
+      return '';
+    }).join('');
+
+  document.getElementById('modal-client-body').innerHTML = `
+    ${headerHtml}
+    <div class="timeline-section" style="margin-top:20px;">
+      <div class="timeline-title">📜 Historique complet (${events.length} événement${events.length > 1 ? 's' : ''})</div>
+      ${timelineHtml}
+    </div>`;
+
+  document.getElementById('overlay-client').classList.add('open');
+}
+
+function closeModal() { document.getElementById('overlay-client').classList.remove('open'); }
+document.getElementById('overlay-client').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+/* ── CSV Export ── */
+function exportClientsCSV() {
+  const sep = ';';
+  const rows = [
+    ['Prénom', 'Nom', 'Adresse', 'Ville', 'Email', 'Téléphone', 'CA accepté (€)', 'CA encaissé (€)', 'Nb devis', 'Nb interventions', 'Nb factures', 'Dernière activité'],
+    ...allClients.map(c => [
+      c.prenom, c.nom,
+      c.contact.adresse || '', c.contact.ville || '', c.contact.email || '', c.contact.tel || '',
+      c.ca.toFixed(2).replace('.', ','),
+      c.caFacture.toFixed(2).replace('.', ','),
+      String(c.devis.length),
+      String(c.interventions.filter(i => i.status !== 'annule').length),
+      String(c.factures.length),
+      c.lastDate ? fmtDate(c.lastDate) : '—'
+    ])
+  ];
+  const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(sep)).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a'); a.href = url; a.download = `clients-allotonte-${today()}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('✓ CSV exporté');
+}
+
+/* ── Init ── */
+renderStats();
+renderClients();
+</script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi matériel — Allo Tonte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --green-dark:#153d07; --green:#1e5c0a; --green-light:#4a9e25; --green-pale:#e8f5e0;
+      --orange:#ea6c00; --orange-pale:#fff3e0;
+      --red:#c0392b; --red-pale:#fde8e7;
+      --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb; --gray-300:#d1d5db;
+      --gray-400:#9ca3af; --gray-500:#6b7280; --gray-700:#374151; --gray-900:#111827;
+      --white:#ffffff; --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.1); --shadow-md:0 4px 12px rgba(0,0,0,.1);
+    }
+    body { font-family:'Inter',sans-serif; font-size:14px; color:var(--gray-900); background:var(--gray-100); min-height:100vh; }
+
+    /* ── Navbar ── */
+    .navbar { position:fixed;top:0;left:0;right:0;height:56px;background:var(--green-dark);display:flex;align-items:center;padding:0 20px;gap:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3); }
+    .navbar-logo { height:34px;width:auto;background:#d0d0d0;border-radius:6px;padding:3px 8px;margin-right:10px; }
+    .nav-links { display:flex;align-items:center;gap:2px;flex:1; }
+    .nav-link { color:rgba(255,255,255,.65);font-size:.78rem;font-weight:600;text-decoration:none;padding:6px 10px;border-radius:6px;transition:all .15s;white-space:nowrap; }
+    .nav-link:hover { color:#fff;background:rgba(255,255,255,.1); }
+    .nav-link.active { color:#fff;background:rgba(255,255,255,.18); }
+    .nav-sep { width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px; }
+
+    /* ── Layout ── */
+    .main { margin-top:56px; padding:24px; max-width:1200px; margin-left:auto; margin-right:auto; }
+    .page-header { display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap; }
+    .page-header h1 { font-size:1.3rem;font-weight:800;flex:1; }
+
+    /* ── Boutons ── */
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius);border:none;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s; }
+    .btn:hover { opacity:.88; }
+    .btn-green  { background:var(--green);color:#fff; }
+    .btn-gray   { background:var(--gray-200);color:var(--gray-700); }
+    .btn-outline { background:#fff;color:var(--green);border:1.5px solid var(--green); }
+    .btn-red    { background:var(--red-pale);color:var(--red);border:1.5px solid var(--red); }
+    .btn-sm { padding:5px 12px;font-size:.75rem;border-radius:7px; }
+    .btn-icon { padding:6px 10px;font-size:.85rem; }
+
+    /* ── Grid engins ── */
+    .engins-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:18px; }
+    .engin-card { background:var(--white);border:1.5px solid var(--gray-200);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .15s; }
+    .engin-card:hover { box-shadow:var(--shadow-md); }
+    .engin-card.alerte { border-color:var(--orange);background:var(--orange-pale); }
+    .engin-card.critique { border-color:var(--red);background:var(--red-pale); }
+
+    /* Card header */
+    .card-head { padding:14px 16px;display:flex;align-items:center;gap:12px; }
+    .card-emoji { font-size:2rem;line-height:1; }
+    .card-info { flex:1; }
+    .card-nom { font-size:1rem;font-weight:800;color:var(--gray-900); }
+    .card-sous { font-size:.75rem;color:var(--gray-500);margin-top:1px; }
+    .card-badge { font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px; }
+    .badge-ok   { background:var(--green-pale);color:var(--green-dark); }
+    .badge-alerte { background:var(--orange-pale);color:var(--orange); }
+    .badge-critique { background:var(--red-pale);color:var(--red); }
+
+    /* Card body */
+    .card-body { padding:0 16px 14px; }
+    .card-stats { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px; }
+    .cstat { background:var(--gray-50);border-radius:8px;padding:8px 10px; }
+    .cstat-lbl { font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:2px; }
+    .cstat-val { font-size:.92rem;font-weight:800;color:var(--gray-900); }
+
+    /* Dernière révision */
+    .rev-list { list-style:none;margin-bottom:10px; }
+    .rev-item { display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:.78rem; }
+    .rev-item:last-child { border-bottom:none; }
+    .rev-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+    .rev-dot.vidange { background:#f59e0b; }
+    .rev-dot.lame    { background:var(--green-light); }
+    .rev-dot.filtre  { background:#6366f1; }
+    .rev-dot.autre   { background:var(--gray-300); }
+    .rev-date { color:var(--gray-500);font-size:.72rem;margin-left:auto;flex-shrink:0; }
+    .rev-heures { color:var(--gray-400);font-size:.7rem; }
+
+    /* Progress bar heures */
+    .hours-bar { background:var(--gray-200);border-radius:99px;height:6px;margin:4px 0 2px;overflow:hidden; }
+    .hours-bar-fill { height:100%;border-radius:99px;transition:width .3s; }
+    .hours-bar-fill.ok       { background:var(--green-light); }
+    .hours-bar-fill.alerte   { background:var(--orange); }
+    .hours-bar-fill.critique { background:var(--red); }
+    .hours-caption { font-size:.7rem;color:var(--gray-400);display:flex;justify-content:space-between; }
+
+    /* Card footer */
+    .card-footer { padding:10px 16px;border-top:1px solid var(--gray-100);display:flex;gap:8px;flex-wrap:wrap; }
+
+    /* ── Overlay modal ── */
+    .overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:20px; }
+    .overlay.open { display:flex; }
+    .modal { background:#fff;border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.25); }
+    .modal-head { padding:18px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:10px; }
+    .modal-head h3 { font-size:1rem;font-weight:700;flex:1; }
+    .modal-close { background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gray-400);padding:4px 8px;border-radius:6px; }
+    .modal-close:hover { background:var(--gray-100); }
+    .modal-body { padding:20px; }
+    .modal-footer { padding:14px 20px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end; }
+
+    .form-group { margin-bottom:14px; }
+    .form-label { display:block;font-size:.75rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px; }
+    .form-input { width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.88rem;color:var(--gray-900);outline:none;transition:border-color .15s; }
+    .form-input:focus { border-color:var(--green); }
+    .form-row { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+    .form-select { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center; }
+
+    .rev-form-list { list-style:none; }
+    .rev-form-item { display:grid;grid-template-columns:auto 1fr 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:.8rem; }
+    .rev-form-item input { width:100%;padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:inherit;font-size:.8rem;outline:none; }
+    .rev-form-item input:focus { border-color:var(--green); }
+
+    /* Toast */
+    .toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gray-900);color:#fff;padding:10px 22px;border-radius:99px;font-size:.82rem;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none; }
+    .toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+
+    /* Empty state */
+    .empty-state { text-align:center;padding:60px 20px;color:var(--gray-400); }
+    .empty-state p { font-size:1rem;font-weight:600;margin-top:10px; }
+    .empty-state span { font-size:3rem; }
+
+    @media (max-width:600px) {
+      .engins-grid { grid-template-columns:1fr; }
+      .form-row { grid-template-columns:1fr; }
+      .nav-links .nav-sep ~ .nav-link { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="clients.html"            class="nav-link">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link active">🔧 Matériel</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-header">
+    <h1>🔧 Suivi matériel</h1>
+    <button class="btn btn-green" onclick="openModal()">+ Ajouter un engin</button>
+    <button class="btn btn-gray" onclick="exportBackup()">⬇ Exporter</button>
+    <button class="btn btn-gray" onclick="document.getElementById('import-input').click()">⬆ Importer</button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importBackup(event)">
+  </div>
+
+  <div id="engins-grid" class="engins-grid"></div>
+  <div id="empty-state" class="empty-state" style="display:none;">
+    <span>🔧</span>
+    <p>Aucun engin enregistré.</p>
+    <button class="btn btn-green" style="margin-top:14px;" onclick="openModal()">+ Ajouter le premier engin</button>
+  </div>
+</div>
+
+<!-- ── Modal ajout / édition engin ── -->
+<div class="overlay" id="overlay-engin">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Ajouter un engin</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Emoji</label>
+          <input class="form-input" id="f-emoji" value="🚜" placeholder="🌿" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom de l'engin *</label>
+          <input class="form-input" id="f-nom" placeholder="Tondeuse autoportée">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Marque / modèle</label>
+          <input class="form-input" id="f-modele" placeholder="Honda HF2620">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date d'achat</label>
+          <input class="form-input" id="f-achat" type="text" placeholder="jj/mm/aaaa">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Heures moteur actuelles</label>
+          <input class="form-input" id="f-heures" type="number" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intervalle révision (h)</label>
+          <input class="form-input" id="f-intervalle" type="number" min="1" placeholder="50" value="50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <input class="form-input" id="f-notes" placeholder="Observations, numéro de série…">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-green" onclick="saveEngin()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal révision ── -->
+<div class="overlay" id="overlay-rev">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Ajouter une révision — <span id="rev-engin-nom"></span></h3>
+      <button class="modal-close" onclick="closeRevModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date de la révision</label>
+          <input class="form-input" id="rv-date" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Heures au compteur</label>
+          <input class="form-input" id="rv-heures" type="number" min="0" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type de révision</label>
+        <select class="form-input form-select" id="rv-type">
+          <option value="vidange">Vidange huile moteur</option>
+          <option value="lame">Affûtage / remplacement lame</option>
+          <option value="filtre">Remplacement filtre à air</option>
+          <option value="bougie">Remplacement bougie</option>
+          <option value="courroie">Remplacement courroie / transmission</option>
+          <option value="graissage">Graissage général</option>
+          <option value="carbu">Nettoyage carburateur</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Détails / observations</label>
+        <input class="form-input" id="rv-notes" placeholder="Ex. : Huile 10W30, 0,6L. Lame neuve SKU#1234">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Coût (€)</label>
+          <input class="form-input" id="rv-cout" type="number" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prochaine révision dans (h)</label>
+          <input class="form-input" id="rv-next" type="number" min="1" placeholder="50">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeRevModal()">Annuler</button>
+      <button class="btn btn-green" onclick="saveRev()">Enregistrer la révision</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════ DATA ════════ */
+let engins = JSON.parse(localStorage.getItem('at-materiel') || '[]');
+let editId = null;
+let revId  = null;
+
+function save() { localStorage.setItem('at-materiel', JSON.stringify(engins)); }
+function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function today() {
+  const t = new Date();
+  return `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()}`;
+}
+
+/* ════════ RENDER ════════ */
+function render() {
+  const grid = document.getElementById('engins-grid');
+  const empty = document.getElementById('empty-state');
+  if (!engins.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = engins.map(e => cardHtml(e)).join('');
+}
+
+function cardHtml(e) {
+  const revs = e.revisions || [];
+  const lastRev = revs[revs.length-1];
+  const heuresDepuis = lastRev ? (e.heures||0) - (lastRev.heures||0) : (e.heures||0);
+  const intervalle   = e.intervalle || 50;
+  const pct = Math.min(heuresDepuis / intervalle * 100, 100);
+  const etat = pct >= 100 ? 'critique' : pct >= 75 ? 'alerte' : 'ok';
+  const badgeClass = etat === 'critique' ? 'badge-critique' : etat === 'alerte' ? 'badge-alerte' : 'badge-ok';
+  const badgeLabel = etat === 'critique' ? '⚠️ Révision urgente' : etat === 'alerte' ? '🔶 Révision bientôt' : '✅ OK';
+
+  const lastRevHtml = revs.slice(-3).reverse().map(r => `
+    <li class="rev-item">
+      <span class="rev-dot ${dotClass(r.type)}"></span>
+      <span>${revLabel(r.type)}</span>
+      ${r.notes ? `<span style="color:var(--gray-400);font-size:.7rem;">${r.notes.slice(0,30)}</span>` : ''}
+      <span class="rev-date">${r.date}</span>
+    </li>`).join('') || `<li class="rev-item" style="color:var(--gray-400);font-style:italic;">Aucune révision enregistrée</li>`;
+
+  return `
+  <div class="engin-card ${etat==='ok'?'':etat}" id="card-${e.id}">
+    <div class="card-head">
+      <span class="card-emoji">${e.emoji||'🔧'}</span>
+      <div class="card-info">
+        <div class="card-nom">${e.nom}</div>
+        <div class="card-sous">${e.modele||''} ${e.achat?'— Achat : '+e.achat:''}</div>
+      </div>
+      <span class="card-badge ${badgeClass}">${badgeLabel}</span>
+    </div>
+    <div class="card-body">
+      <div class="card-stats">
+        <div class="cstat"><div class="cstat-lbl">Heures moteur</div><div class="cstat-val">${e.heures||0} h</div></div>
+        <div class="cstat"><div class="cstat-lbl">Depuis révision</div><div class="cstat-val">${heuresDepuis} h</div></div>
+      </div>
+      <div>
+        <div class="hours-bar"><div class="hours-bar-fill ${etat}" style="width:${pct}%"></div></div>
+        <div class="hours-caption"><span>0 h</span><span>${Math.round(pct)}% — prochaine à ${intervalle} h</span><span>${intervalle} h</span></div>
+      </div>
+      <div style="margin-top:10px;">
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:4px;">Dernières révisions</div>
+        <ul class="rev-list">${lastRevHtml}</ul>
+      </div>
+      ${e.notes ? `<div style="font-size:.75rem;color:var(--gray-500);background:var(--gray-50);border-radius:6px;padding:6px 8px;">${e.notes}</div>` : ''}
+    </div>
+    <div class="card-footer">
+      <button class="btn btn-green btn-sm" onclick="openRevModal('${e.id}')">+ Révision</button>
+      <button class="btn btn-outline btn-sm" onclick="addHeures('${e.id}')">⏱ Heures</button>
+      <button class="btn btn-gray btn-sm" onclick="openModal('${e.id}')">✏️ Modifier</button>
+      <button class="btn btn-red btn-sm btn-icon" onclick="deleteEngin('${e.id}')" title="Supprimer">🗑</button>
+    </div>
+  </div>`;
+}
+
+function dotClass(type) { return {vidange:'vidange',lame:'lame',filtre:'filtre'}[type]||'autre'; }
+function revLabel(type) {
+  return {vidange:'Vidange huile',lame:'Lame',filtre:'Filtre air',bougie:'Bougie',courroie:'Courroie',graissage:'Graissage',carbu:'Carburateur',autre:'Autre'}[type]||type;
+}
+
+/* ════════ MODAL ENGIN ════════ */
+function openModal(id=null) {
+  editId = id;
+  const e = id ? engins.find(x=>x.id===id) : null;
+  document.getElementById('modal-title').textContent = id ? 'Modifier l\'engin' : 'Ajouter un engin';
+  document.getElementById('f-emoji').value      = e?.emoji      || '🔧';
+  document.getElementById('f-nom').value         = e?.nom        || '';
+  document.getElementById('f-modele').value      = e?.modele     || '';
+  document.getElementById('f-achat').value       = e?.achat      || '';
+  document.getElementById('f-heures').value      = e?.heures     || '';
+  document.getElementById('f-intervalle').value  = e?.intervalle || 50;
+  document.getElementById('f-notes').value       = e?.notes      || '';
+  document.getElementById('overlay-engin').classList.add('open');
+  setTimeout(() => document.getElementById('f-nom').focus(), 50);
+}
+function closeModal() { document.getElementById('overlay-engin').classList.remove('open'); }
+
+function saveEngin() {
+  const nom = document.getElementById('f-nom').value.trim();
+  if (!nom) { alert('Nom obligatoire'); return; }
+  const data = {
+    emoji:      document.getElementById('f-emoji').value.trim()     || '🔧',
+    nom,
+    modele:     document.getElementById('f-modele').value.trim(),
+    achat:      document.getElementById('f-achat').value.trim(),
+    heures:     parseInt(document.getElementById('f-heures').value)||0,
+    intervalle: parseInt(document.getElementById('f-intervalle').value)||50,
+    notes:      document.getElementById('f-notes').value.trim(),
+  };
+  if (editId) {
+    const i = engins.findIndex(x=>x.id===editId);
+    if (i>=0) engins[i] = { ...engins[i], ...data };
+  } else {
+    engins.push({ id:uid(), revisions:[], ...data });
+  }
+  save(); render(); closeModal();
+  showToast(editId ? '✓ Engin mis à jour' : '✓ Engin ajouté');
+}
+
+function deleteEngin(id) {
+  if (!confirm('Supprimer cet engin et tout son historique ?')) return;
+  engins = engins.filter(x=>x.id!==id);
+  save(); render(); showToast('Engin supprimé');
+}
+
+/* ════════ MODAL RÉVISION ════════ */
+function openRevModal(id) {
+  revId = id;
+  const e = engins.find(x=>x.id===id);
+  if (!e) return;
+  document.getElementById('rev-engin-nom').textContent = e.nom;
+  document.getElementById('rv-date').value   = today();
+  document.getElementById('rv-heures').value = e.heures || '';
+  document.getElementById('rv-type').value   = 'vidange';
+  document.getElementById('rv-notes').value  = '';
+  document.getElementById('rv-cout').value   = '';
+  document.getElementById('rv-next').value   = e.intervalle || 50;
+  document.getElementById('overlay-rev').classList.add('open');
+}
+function closeRevModal() { document.getElementById('overlay-rev').classList.remove('open'); }
+
+function saveRev() {
+  const e = engins.find(x=>x.id===revId); if (!e) return;
+  const rev = {
+    id:     uid(),
+    date:   document.getElementById('rv-date').value.trim()  || today(),
+    heures: parseInt(document.getElementById('rv-heures').value)||0,
+    type:   document.getElementById('rv-type').value,
+    notes:  document.getElementById('rv-notes').value.trim(),
+    cout:   parseFloat(document.getElementById('rv-cout').value)||0,
+    next:   parseInt(document.getElementById('rv-next').value)||50,
+  };
+  if (!e.revisions) e.revisions = [];
+  e.revisions.push(rev);
+  // Mettre à jour l'intervalle de l'engin
+  e.intervalle = rev.next;
+  save(); render(); closeRevModal();
+  showToast(`✓ Révision (${revLabel(rev.type)}) enregistrée`);
+}
+
+/* ════════ AJOUT HEURES ════════ */
+function addHeures(id) {
+  const e = engins.find(x=>x.id===id); if (!e) return;
+  const val = prompt(`Heures moteur actuelles pour "${e.nom}" :`, e.heures||0);
+  if (val === null) return;
+  const h = parseInt(val);
+  if (isNaN(h) || h < 0) { alert('Valeur invalide'); return; }
+  e.heures = h;
+  save(); render();
+  showToast(`✓ Heures mises à jour : ${h} h`);
+}
+
+/* ════════ EXPORT / IMPORT ════════ */
+function exportBackup() {
+  const blob = new Blob([JSON.stringify({ engins }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `materiel-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('↓ Sauvegarde exportée');
+}
+function importBackup(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (Array.isArray(data.engins)) {
+        if (!confirm(`Importer ${data.engins.length} engin(s) ? Les données actuelles seront remplacées.`)) return;
+        engins = data.engins;
+        save(); render();
+        showToast(`✓ ${engins.length} engin(s) importé(s)`);
+      } else { alert('Fichier invalide'); }
+    } catch { alert('Erreur lors de la lecture du fichier'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ════════ TOAST ════════ */
+function showToast(msg, duration=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ════════ FERMETURE OVERLAY ════════ */
+['overlay-engin','overlay-rev'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) { if(e.target===this) { if(id==='overlay-engin') closeModal(); else closeRevModal(); }});
+});
+
+/* ════════ INIT ════════ */
+// Données démo si vide
+if (!engins.length) {
+  engins = [
+    { id:uid(), emoji:'🚜', nom:'Tondeuse autoportée', modele:'', achat:'', heures:42, intervalle:50, notes:'', revisions:[
+      { id:uid(), date:'15/03/2026', heures:10, type:'vidange', notes:'Huile 10W30', cout:18, next:50 },
+      { id:uid(), date:'28/04/2026', heures:30, type:'lame', notes:'Lame neuve', cout:35, next:25 },
+    ]},
+    { id:uid(), emoji:'🌿', nom:'Débroussailleuse', modele:'', achat:'', heures:18, intervalle:25, notes:'', revisions:[
+      { id:uid(), date:'01/04/2026', heures:5, type:'filtre', notes:'', cout:8, next:25 },
+    ]},
+    { id:uid(), emoji:'💨', nom:'Souffleur thermique', modele:'', achat:'', heures:8, intervalle:20, notes:'', revisions:[] },
+  ];
+  save();
+}
+render();
+</script>
+</body>
+</html>

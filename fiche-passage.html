@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiche de passage — Allo Tonte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-dark:#153d07; --green:#1e5c0a; --green-light:#4a9e25; --green-pale:#e8f5e0;
+      --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb; --gray-300:#d1d5db;
+      --gray-400:#9ca3af; --gray-500:#6b7280; --gray-700:#374151; --gray-900:#111827;
+    }
+    body { font-family:'Inter',sans-serif; font-size:13px; background:var(--gray-100); min-height:100vh; padding-top:56px; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position:fixed; top:0; left:0; right:0; height:56px;
+      background:var(--green-dark);
+      display:flex; align-items:center; padding:0 20px; gap:0;
+      z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.3);
+    }
+    .navbar-logo { height:34px; width:auto; background:#d0d0d0; border-radius:6px; padding:3px 8px; margin-right:10px; }
+    .nav-links { display:flex; align-items:center; gap:2px; flex:1; }
+    .nav-link {
+      color:rgba(255,255,255,.65); font-size:.78rem; font-weight:600; text-decoration:none;
+      padding:6px 10px; border-radius:6px; transition:all .15s; white-space:nowrap;
+    }
+    .nav-link:hover { color:#fff; background:rgba(255,255,255,.1); }
+    .nav-link.active { color:#fff; background:rgba(255,255,255,.18); }
+    .nav-sep { width:1px; height:20px; background:rgba(255,255,255,.15); margin:0 4px; }
+    .nav-spacer { flex:1; }
+    .navbar-btn {
+      background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+      color:white; border-radius:8px; padding:7px 14px;
+      font-family:inherit; font-size:.82rem; font-weight:600; cursor:pointer; transition:background .15s;
+    }
+    .navbar-btn:hover { background:rgba(255,255,255,.2); }
+
+    /* ── Toolbar ── */
+    #toolbar { max-width:780px; margin:24px auto 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:0 16px; }
+    #toolbar h1 { font-size:1rem; font-weight:700; color:var(--green); flex:1; }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; border:none; font-family:inherit; font-size:.82rem; font-weight:600; cursor:pointer; transition:opacity .15s; }
+    .btn:hover { opacity:.85; }
+    .btn-green { background:var(--green); color:#fff; }
+    .btn-outline { background:#fff; color:var(--green); border:1.5px solid var(--green); }
+    .btn-gray { background:var(--gray-200); color:var(--gray-700); }
+
+    /* ── Fiche ── */
+    #fiche {
+      max-width:780px; margin:0 auto 40px; background:#fff;
+      padding:32px 40px; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.1);
+    }
+
+    /* En-tête */
+    .fiche-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:16px; border-bottom:3px solid var(--green); }
+    .fiche-logo img { height:52px; width:auto; }
+    .fiche-titre { text-align:right; }
+    .fiche-titre h2 { font-size:1.1rem; font-weight:800; color:var(--green-dark); }
+    .fiche-titre p { font-size:.75rem; color:var(--gray-500); margin-top:2px; }
+
+    /* Bandeau coloré */
+    .fiche-bandeau {
+      background:var(--green-pale); border:2px solid var(--green-light);
+      border-radius:10px; padding:14px 20px; margin-bottom:20px;
+      display:flex; gap:24px; flex-wrap:wrap; align-items:center;
+    }
+    .fiche-bandeau-item { display:flex; flex-direction:column; gap:2px; }
+    .fiche-bandeau-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--green); }
+    .fiche-bandeau-val { font-size:.95rem; font-weight:800; color:var(--green-dark); }
+    .fiche-bandeau-val input {
+      border:none; border-bottom:2px solid var(--green-light); background:transparent;
+      font-family:inherit; font-size:.95rem; font-weight:800; color:var(--green-dark);
+      outline:none; padding:1px 4px; min-width:120px;
+    }
+    .fiche-bandeau-val input:focus { border-bottom-color:var(--green); }
+
+    /* Infos client */
+    .client-box { background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px; padding:14px 18px; margin-bottom:20px; }
+    .client-lbl { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--gray-500); margin-bottom:8px; }
+    .client-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; }
+    .field-row { display:flex; align-items:baseline; gap:6px; font-size:.8rem; }
+    .field-row label { flex-shrink:0; color:var(--gray-500); min-width:68px; font-size:.75rem; }
+    .field-val {
+      flex:1; border:none; border-bottom:1.5px solid var(--gray-300); background:transparent;
+      font-family:inherit; font-size:.82rem; font-weight:600; color:var(--gray-900);
+      padding:1px 4px; outline:none; width:100%; transition:border-color .15s;
+    }
+    .field-val:focus { border-bottom-color:var(--green); }
+
+    /* Prestations réalisées */
+    .section-title { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--green); border-bottom:2px solid var(--green-pale); padding-bottom:5px; margin-bottom:12px; }
+
+    .check-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; margin-bottom:12px; }
+    .check-item { display:flex; align-items:center; gap:8px; font-size:.82rem; color:var(--gray-700); }
+    .check-item input[type="checkbox"] { width:16px; height:16px; accent-color:var(--green); cursor:pointer; flex-shrink:0; }
+
+    /* Observations */
+    .obs-area {
+      width:100%; min-height:64px; border:1.5px solid var(--gray-200); border-radius:8px;
+      padding:10px 12px; font-family:inherit; font-size:.82rem; color:var(--gray-900);
+      outline:none; resize:vertical; transition:border-color .15s;
+    }
+    .obs-area:focus { border-color:var(--green); }
+
+    /* Prochaine visite */
+    .next-box { display:flex; align-items:center; gap:14px; background:var(--green-pale); border-radius:10px; padding:12px 18px; margin-top:16px; flex-wrap:wrap; }
+    .next-lbl { font-size:.78rem; font-weight:700; color:var(--green); }
+    .inline-field {
+      border:none; border-bottom:1.5px solid var(--green-light); background:transparent;
+      font-family:inherit; font-size:.82rem; font-weight:600; color:var(--green-dark);
+      padding:1px 4px; outline:none; min-width:100px;
+    }
+    .inline-field:focus { border-bottom-color:var(--green); }
+
+    /* Message bas */
+    .fiche-merci { text-align:center; margin-top:20px; padding-top:16px; border-top:1.5px solid var(--gray-200); }
+    .fiche-merci p { font-size:.8rem; color:var(--gray-500); line-height:1.7; }
+    .fiche-merci strong { color:var(--green-dark); }
+
+    /* Footer doc */
+    .doc-footer { margin-top:14px; font-size:.65rem; color:var(--gray-400); text-align:center; line-height:1.7; }
+
+    /* Séparateur pointillé (pour 2 fiches par page) */
+    .cut-line { border:none; border-top:2px dashed var(--gray-300); margin:28px 0; position:relative; text-align:center; }
+    .cut-line span { position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:#fff; padding:0 10px; font-size:.65rem; color:var(--gray-400); }
+
+    /* Bouton ajout */
+    .btn-add-row { margin-top:6px; background:none; border:1.5px dashed var(--gray-300); color:var(--gray-500); font-family:inherit; font-size:.75rem; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all .15s; }
+    .btn-add-row:hover { border-color:var(--green); color:var(--green); }
+    .btn-del-row { background:none; border:none; color:#c0392b; font-size:1rem; cursor:pointer; padding:0 4px; opacity:.5; }
+    .btn-del-row:hover { opacity:1; }
+    .extra-list { list-style:none; }
+    .extra-list li { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:.82rem; }
+    .extra-list li input { flex:1; border:none; border-bottom:1px solid var(--gray-200); font-family:inherit; font-size:.82rem; outline:none; padding:1px 4px; }
+    .extra-list li input:focus { border-bottom-color:var(--green); }
+
+    @media print {
+      body { background:#fff; padding-top:0; }
+      .navbar, #toolbar { display:none !important; }
+      #fiche { box-shadow:none; border-radius:0; max-width:100%; padding:18px 24px; margin:0; }
+      .field-val, .inline-field, .obs-area, .fiche-bandeau-val input, .extra-list li input { border-bottom-color:transparent !important; border-color:transparent !important; }
+      .btn-add-row, .btn-del-row { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="clients.html"            class="nav-link">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link active">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link">🔧 Matériel</a>
+  </div>
+</nav>
+
+<div id="toolbar">
+  <h1>🚪 Fiche de passage</h1>
+  <button class="btn btn-gray" onclick="newFiche()">🔄 Nouvelle fiche</button>
+  <button class="btn btn-green" onclick="window.print()">🖨 Imprimer / PDF</button>
+</div>
+
+<div id="fiche">
+
+  <!-- En-tête -->
+  <div class="fiche-header">
+    <div class="fiche-logo">
+      <img src="allotonte-removebg-preview.png" alt="Allo Tonte">
+    </div>
+    <div class="fiche-titre">
+      <h2>Avis de passage</h2>
+      <p id="prest-contact-header"></p>
+    </div>
+  </div>
+
+  <!-- Bandeau date/heure -->
+  <div class="fiche-bandeau">
+    <div class="fiche-bandeau-item">
+      <span class="fiche-bandeau-lbl">Date d'intervention</span>
+      <span class="fiche-bandeau-val"><input id="date-interv" type="text" placeholder="jj/mm/aaaa"></span>
+    </div>
+    <div class="fiche-bandeau-item">
+      <span class="fiche-bandeau-lbl">Heure</span>
+      <span class="fiche-bandeau-val"><input id="heure-interv" type="text" placeholder="09h30" style="min-width:70px;"></span>
+    </div>
+    <div class="fiche-bandeau-item">
+      <span class="fiche-bandeau-lbl">Durée</span>
+      <span class="fiche-bandeau-val"><input id="duree-interv" type="text" placeholder="1h30" style="min-width:60px;"></span>
+    </div>
+    <div class="fiche-bandeau-item">
+      <span class="fiche-bandeau-lbl">Intervenant</span>
+      <span class="fiche-bandeau-val"><input id="intervenant" type="text" placeholder="Prénom"></span>
+    </div>
+  </div>
+
+  <!-- Infos client -->
+  <div class="client-box">
+    <div class="client-lbl">Client</div>
+    <div class="client-grid">
+      <div class="field-row"><label>Nom :</label><input class="field-val" id="c-nom" placeholder="Prénom NOM"></div>
+      <div class="field-row"><label>Adresse :</label><input class="field-val" id="c-adresse" placeholder="N° rue, ville"></div>
+    </div>
+  </div>
+
+  <!-- Prestations réalisées -->
+  <div style="margin-bottom:16px;">
+    <div class="section-title">Prestations réalisées</div>
+    <div class="check-grid">
+      <label class="check-item"><input type="checkbox"> Tonte de pelouse</label>
+      <label class="check-item"><input type="checkbox"> Taille de haies</label>
+      <label class="check-item"><input type="checkbox"> Débroussaillage</label>
+      <label class="check-item"><input type="checkbox"> Ramassage de feuilles / soufflage</label>
+      <label class="check-item"><input type="checkbox"> Désherbage allées / bordures</label>
+      <label class="check-item"><input type="checkbox"> Nettoyage haute pression</label>
+      <label class="check-item"><input type="checkbox"> Évacuation des déchets verts</label>
+      <label class="check-item"><input type="checkbox"> Arrosage</label>
+    </div>
+    <ul class="extra-list" id="extra-list"></ul>
+    <button class="btn-add-row" onclick="addExtra()">+ Autre prestation</button>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom:16px;">
+    <div class="section-title">Observations / remarques</div>
+    <textarea class="obs-area" id="observations" placeholder="Ex. : Haies côté rue à retailler prochainement. Présence de taupes signalée. RAS sinon."></textarea>
+  </div>
+
+  <!-- Prochaine visite -->
+  <div class="next-box">
+    <span class="next-lbl">🗓 Prochain passage prévu :</span>
+    <span>le <input class="inline-field" id="next-date" placeholder="jj/mm/aaaa"></span>
+    <span>— <input class="inline-field" id="next-info" placeholder="Tonte + taille haies" style="min-width:180px;"></span>
+  </div>
+
+  <!-- Message de remerciement -->
+  <div class="fiche-merci">
+    <p>Merci de votre confiance ! 🌿<br>
+    Pour toute question ou modification : <strong id="merci-contact"></strong></p>
+  </div>
+
+  <div class="doc-footer" id="doc-footer"></div>
+
+  <!-- Séparateur (2 fiches par page) -->
+  <hr class="cut-line"><span>✂ Découper ici</span>
+
+  <!-- Deuxième fiche identique (copie automatique) -->
+  <div style="margin-top:28px;">
+    <div class="fiche-header">
+      <div class="fiche-logo"><img src="allotonte-removebg-preview.png" alt="Allo Tonte"></div>
+      <div class="fiche-titre"><h2>Avis de passage</h2><p id="prest-contact-header2"></p></div>
+    </div>
+    <div class="fiche-bandeau" id="bandeau2" style="font-size:.85rem;"></div>
+    <div class="client-box" id="client2"></div>
+    <div style="margin-bottom:10px;">
+      <div class="section-title">Prestations réalisées</div>
+      <div id="checks2" class="check-grid"></div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <div class="section-title">Observations</div>
+      <div id="obs2" style="font-size:.82rem;color:var(--gray-700);min-height:40px;white-space:pre-wrap;"></div>
+    </div>
+    <div class="next-box" id="next2"></div>
+    <div class="fiche-merci"><p>Merci de votre confiance ! 🌿<br>Pour toute question : <strong id="merci-contact2"></strong></p></div>
+    <div class="doc-footer" id="doc-footer2"></div>
+  </div>
+
+</div>
+
+<script>
+const settings = JSON.parse(localStorage.getItem('at-settings') || '{}');
+
+function init() {
+  const nom    = settings.nom   || 'Allo Tonte';
+  const tel    = settings.tel   || '07 56 95 15 66';
+  const email  = settings.email || 'allotonte@gmail.com';
+  const contact = [tel, email].filter(Boolean).join(' — ');
+
+  document.getElementById('prest-contact-header').textContent  = contact;
+  document.getElementById('prest-contact-header2').textContent = contact;
+  document.getElementById('merci-contact').textContent  = contact || nom;
+  document.getElementById('merci-contact2').textContent = contact || nom;
+
+  const footer = `${nom}${settings.adresse ? ' — ' + settings.adresse : ''}${tel ? ' — ' + tel : ''}${email ? ' — ' + email : ''}${settings.siret ? ' — SIRET : ' + settings.siret : ''}${settings.sap ? ' — Agrément SAP : ' + settings.sap : ''}`;
+  document.getElementById('doc-footer').textContent  = footer;
+  document.getElementById('doc-footer2').textContent = footer;
+  document.getElementById('intervenant').value = nom;
+
+  // Date du jour
+  const t = new Date();
+  const dd = String(t.getDate()).padStart(2,'0');
+  const mm = String(t.getMonth()+1).padStart(2,'0');
+  document.getElementById('date-interv').value = `${dd}/${mm}/${t.getFullYear()}`;
+
+  syncCopie();
+}
+
+function addExtra() {
+  const li = document.createElement('li');
+  li.innerHTML = `<input type="text" placeholder="Prestation supplémentaire…" oninput="syncCopie()"><button class="btn-del-row" onclick="this.parentNode.remove();syncCopie()">×</button>`;
+  document.getElementById('extra-list').appendChild(li);
+}
+
+/* ── Sync copie bas de page ── */
+function syncCopie() {
+  // Bandeau
+  const b = document.getElementById('bandeau2');
+  b.innerHTML = `
+    <div class="fiche-bandeau-item"><span class="fiche-bandeau-lbl">Date</span><span class="fiche-bandeau-val">${v('date-interv')}</span></div>
+    <div class="fiche-bandeau-item"><span class="fiche-bandeau-lbl">Heure</span><span class="fiche-bandeau-val">${v('heure-interv')}</span></div>
+    <div class="fiche-bandeau-item"><span class="fiche-bandeau-lbl">Durée</span><span class="fiche-bandeau-val">${v('duree-interv')}</span></div>
+    <div class="fiche-bandeau-item"><span class="fiche-bandeau-lbl">Intervenant</span><span class="fiche-bandeau-val">${v('intervenant')}</span></div>`;
+  // Client
+  document.getElementById('client2').innerHTML = `<div class="client-lbl">Client</div><div class="client-grid"><div class="field-row"><label>Nom :</label><span style="font-weight:700;">${v('c-nom')}</span></div><div class="field-row"><label>Adresse :</label><span style="font-weight:700;">${v('c-adresse')}</span></div></div>`;
+  // Checks
+  const checked = [...document.querySelectorAll('.check-grid input[type=checkbox]:checked')].map(c => c.parentNode.textContent.trim());
+  const extras  = [...document.querySelectorAll('#extra-list input')].map(i => i.value.trim()).filter(Boolean);
+  const all = [...checked, ...extras];
+  document.getElementById('checks2').innerHTML = all.length
+    ? all.map(x => `<span class="check-item">✅ ${x}</span>`).join('')
+    : '<span style="color:var(--gray-400);font-size:.78rem;">—</span>';
+  // Obs
+  document.getElementById('obs2').textContent = v('observations') || '—';
+  // Next
+  const nd = v('next-date'); const ni = v('next-info');
+  document.getElementById('next2').innerHTML = `<span class="next-lbl">🗓 Prochain passage prévu :</span> le <strong>${nd||'—'}</strong> — ${ni||'—'}`;
+}
+
+function v(id) { return (document.getElementById(id)||{}).value || ''; }
+
+/* Écouter tous les champs */
+document.addEventListener('input', syncCopie);
+document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', syncCopie));
+
+function newFiche() { if (confirm('Effacer la fiche et en créer une nouvelle ?')) location.reload(); }
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allo Tonte — Planning & Factures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:  #153d07;
+      --green:       #1e5c0a;
+      --green-light: #4a9e25;
+      --green-pale:  #e8f5e0;
+      --red:         #c0392b;
+      --red-pale:    #fde8e7;
+      --blue:        #2563eb;
+      --blue-pale:   #eff6ff;
+      --orange:      #ea6c00;
+      --orange-pale: #fff3e0;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-500:    #6b7280;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+      --radius:      10px;
+      --shadow:      0 1px 3px rgba(0,0,0,.1);
+      --shadow-md:   0 4px 12px rgba(0,0,0,.1);
+    }
+
+    body { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--gray-900); background: var(--gray-100); min-height: 100vh; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: var(--green-dark);
+      display: flex; align-items: center; padding: 0 24px; gap: 14px;
+      z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    .navbar-logo { height: 34px; width: auto; background: #d0d0d0; border-radius: 6px; padding: 3px 8px; }
+    .navbar-title { color: white; font-weight: 700; font-size: .9rem; opacity: .75; }
+    .navbar-spacer { flex: 1; }
+    .navbar-btn {
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      color: white; border-radius: 8px; padding: 7px 14px;
+      font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; transition: background .15s;
+    }
+    .navbar-btn:hover { background: rgba(255,255,255,.2); }
+    .navbar-link { color: rgba(255,255,255,.65); font-size: .8rem; text-decoration: none; transition: color .15s; }
+    .navbar-link:hover { color: white; }
+    .nav-links { display:flex;align-items:center;gap:2px;flex:1; }
+    .nav-link { color:rgba(255,255,255,.65);font-size:.78rem;font-weight:600;text-decoration:none;padding:6px 10px;border-radius:6px;transition:all .15s;white-space:nowrap; }
+    .nav-link:hover { color:#fff;background:rgba(255,255,255,.1); }
+    .nav-link.active { color:#fff;background:rgba(255,255,255,.18); }
+    .nav-sep { width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px; }
+
+    /* ── Layout ── */
+    .main { margin-top: 56px; padding: 24px; max-width: 1400px; margin-left: auto; margin-right: auto; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--gray-200); }
+    .tab-btn {
+      padding: 10px 20px; font-family: inherit; font-size: .88rem; font-weight: 600;
+      border: none; background: none; cursor: pointer; color: var(--gray-500);
+      border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s;
+    }
+    .tab-btn:hover { color: var(--green); }
+    .tab-btn.active { color: var(--green-dark); border-bottom-color: var(--green); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Stat cards ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); }
+    .stat-lbl { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin-bottom: 5px; }
+    .stat-val { font-size: 1.5rem; font-weight: 900; }
+    .stat-sub { font-size: .72rem; color: var(--gray-500); margin-top: 2px; }
+
+    /* ── Week navigation ── */
+    .week-nav {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .week-nav h2 { font-size: 1rem; font-weight: 700; color: var(--gray-900); flex: 1; text-align: center; }
+    .nav-btn {
+      background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px;
+      padding: 8px 16px; font-family: inherit; font-size: .82rem; font-weight: 600;
+      cursor: pointer; color: var(--gray-700); transition: all .15s;
+    }
+    .nav-btn:hover { background: var(--gray-50); }
+    .nav-btn.today { background: var(--green); color: white; border-color: transparent; }
+    .nav-btn.today:hover { background: var(--green-dark); }
+
+    /* ── Calendar grid ── */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      align-items: start;
+    }
+    .day-col {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      overflow: hidden;
+      min-height: 120px;
+    }
+    .day-col.is-today { border-color: var(--green); border-width: 2px; }
+    .day-col.is-past  { opacity: .7; }
+    .day-head {
+      padding: 10px 10px 8px;
+      text-align: center;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .day-col.is-today .day-head { background: var(--green-pale); }
+    .day-name { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); }
+    .day-col.is-today .day-name { color: var(--green); }
+    .day-num  { font-size: 1.15rem; font-weight: 900; color: var(--gray-900); line-height: 1.2; }
+    .day-col.is-today .day-num  { color: var(--green-dark); }
+    .day-events { padding: 7px; }
+
+    /* ── Event cards ── */
+    .ev {
+      border-radius: 7px; padding: 8px 9px; margin-bottom: 7px;
+      border-left: 3px solid; font-size: .78rem; cursor: pointer;
+      transition: box-shadow .15s;
+    }
+    .ev:hover { box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .ev.planifie { background: var(--blue-pale);   border-color: var(--blue); }
+    .ev.en-cours { background: var(--orange-pale); border-color: var(--orange); }
+    .ev.termine  { background: var(--green-pale);  border-color: var(--green); }
+    .ev.annule   { background: var(--gray-100);    border-color: var(--gray-300); opacity: .7; }
+    .ev-time   { font-size: .68rem; color: var(--gray-500); margin-bottom: 1px; }
+    .ev-client { font-weight: 700; color: var(--gray-900); margin-bottom: 1px; line-height: 1.3; }
+    .ev-svc    { font-size: .72rem; color: var(--gray-500); margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ev-footer { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .ev-status {
+      font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 2px 7px; border-radius: 99px;
+    }
+    .ev-status.planifie { background: #dbeafe; color: var(--blue); }
+    .ev-status.en-cours { background: #ffe4cc; color: var(--orange); }
+    .ev-status.termine  { background: var(--green-pale); color: var(--green); }
+    .ev-status.annule   { background: var(--gray-200); color: var(--gray-500); }
+    .ev-btn {
+      border: none; border-radius: 4px; padding: 3px 7px;
+      font-size: .67rem; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .ev-btn-edit { background: rgba(0,0,0,.06); color: var(--gray-700); }
+    .ev-btn-edit:hover { background: rgba(0,0,0,.12); }
+    .ev-btn-fac  { background: var(--green-pale); color: var(--green); }
+    .ev-btn-fac:hover  { background: #c0eaa0; }
+    .ev-btn-fac.done   { background: #d0f0c0; color: var(--green-dark); }
+
+    .day-add {
+      width: 100%; background: none; border: 1px dashed var(--gray-200); border-radius: 6px;
+      padding: 5px; font-size: .72rem; color: var(--gray-300); cursor: pointer;
+      transition: all .15s; font-family: inherit; margin-top: 2px;
+    }
+    .day-add:hover { border-color: var(--green-light); color: var(--green); }
+
+    /* ── Factures table ── */
+    .card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card-header { padding: 14px 20px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .card-header h2 { font-size: .92rem; font-weight: 700; }
+    .ftable { width: 100%; border-collapse: collapse; }
+    .ftable th { text-align: left; padding: 10px 14px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+    .ftable td { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); font-size: .85rem; vertical-align: middle; }
+    .ftable tr:last-child td { border-bottom: none; }
+    .ftable tbody tr:hover { background: var(--gray-50); cursor: pointer; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: .7rem; font-weight: 700; text-transform: uppercase; }
+    .sb-brouillon { background: var(--gray-100); color: var(--gray-500); }
+    .sb-envoyee   { background: var(--blue-pale); color: var(--blue); }
+    .sb-payee     { background: var(--green-pale); color: var(--green); }
+    .tbl-acts { display: flex; gap: 5px; }
+    .act-btn { border: 1px solid var(--gray-200); background: var(--white); border-radius: 6px; padding: 5px 10px; font-family: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; color: var(--gray-700); transition: all .15s; }
+    .act-btn.pdf { color: var(--green); border-color: #b0e0a0; }
+    .act-btn.pdf:hover { background: var(--green-pale); }
+    .act-btn.mail { color: var(--blue); border-color: #bcd0f8; }
+    .act-btn.mail:hover { background: var(--blue-pale); }
+    .act-btn.del { color: var(--red); border-color: #f0c0c0; }
+    .act-btn.del:hover { background: var(--red-pale); }
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--gray-500); }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    /* ── Forms (shared) ── */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: .7rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; }
+    .form-input { border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 8px 11px; font-family: inherit; font-size: .88rem; color: var(--gray-900); background: var(--white); transition: border-color .15s; width: 100%; }
+    .form-input:focus { outline: none; border-color: var(--green-light); }
+    .form-input::placeholder { color: var(--gray-300); }
+    .form-input:read-only { background: var(--gray-50); color: var(--gray-500); }
+    select.form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+    .fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .f-full { grid-column: 1/-1; }
+
+    /* ── Buttons ── */
+    .btn { border: none; border-radius: 8px; padding: 9px 16px; font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .btn-primary   { background: var(--green); color: white; }
+    .btn-primary:hover   { background: var(--green-dark); }
+    .btn-secondary { background: var(--white); color: var(--gray-700); border: 1.5px solid var(--gray-200); }
+    .btn-secondary:hover { background: var(--gray-50); }
+    .btn-danger    { background: var(--red-pale); color: var(--red); border: 1px solid #f0c0c0; }
+    .btn-danger:hover    { background: #fbd4d2; }
+    .btn-orange    { background: var(--orange-pale); color: var(--orange); border: 1px solid #ffd0a0; }
+    .btn-orange:hover    { background: #ffe0b0; }
+    .btn-sm { padding: 6px 11px; font-size: .78rem; }
+
+    /* ── Lines table ── */
+    .lines-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .lines-table th { text-align: left; padding: 7px 8px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+    .lines-table td { padding: 4px 4px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+    .lines-table input { border: 1.5px solid var(--gray-200); border-radius: 6px; padding: 5px 7px; font-family: inherit; font-size: .83rem; width: 100%; }
+    .lines-table input:focus { outline: none; border-color: var(--green-light); }
+    .col-desc  { width: 48%; }
+    .col-qty   { width: 10%; }
+    .col-pu    { width: 16%; }
+    .col-tot   { width: 18%; font-weight: 700; text-align: right; padding-right: 8px !important; }
+    .col-del   { width: 6%; text-align: center; }
+    .del-btn { background: none; border: none; cursor: pointer; color: var(--gray-300); font-size: 1rem; padding: 4px; border-radius: 4px; }
+    .del-btn:hover { color: var(--red); background: var(--red-pale); }
+
+    /* ── Totals mini ── */
+    .mini-totals { margin-left: auto; width: 280px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+    .mt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--gray-100); font-size: .85rem; }
+    .mt-row:last-child { border-bottom: none; }
+    .mt-lbl { color: var(--gray-500); }
+    .mt-val { font-weight: 700; }
+    .mt-row.r-total { background: var(--green-dark); }
+    .mt-row.r-total .mt-lbl, .mt-row.r-total .mt-val { color: white; }
+    .mt-row.r-sap   { background: var(--green-pale); }
+    .mt-row.r-sap   .mt-lbl, .mt-row.r-sap .mt-val { color: var(--green); }
+    .mt-row.r-net   { background: #f0fdf4; }
+    .mt-row.r-net   .mt-val { color: var(--green-dark); }
+    .sap-row-wrap { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--gray-50); border-top: 1px solid var(--gray-200); }
+    .sap-row-wrap label { font-size: .78rem; font-weight: 600; color: var(--green-dark); cursor: pointer; }
+    .toggle { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 99px; cursor: pointer; transition: background .2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 12px; height: 12px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform .2s; }
+    .toggle input:checked + .toggle-slider { background: var(--green); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    /* ── Modals ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--white); border-radius: 14px; width: 820px; max-width: 96vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.22); transform: translateY(12px); transition: transform .2s; }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal.modal-sm { width: 560px; }
+    .modal-head { display: flex; align-items: center; gap: 12px; padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; background: white; z-index: 1; }
+    .modal-head h2 { font-size: 1.05rem; font-weight: 800; flex: 1; }
+    .modal-close { background: var(--gray-100); border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray-500); transition: all .15s; }
+    .modal-close:hover { background: var(--gray-200); color: var(--gray-900); }
+    .modal-body { padding: 20px 24px; }
+    .modal-body-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .modal-section { margin-bottom: 18px; }
+    .modal-section-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-100); }
+    .modal-footer { display: flex; align-items: center; gap: 8px; padding: 14px 24px; border-top: 1px solid var(--gray-200); position: sticky; bottom: 0; background: white; flex-wrap: wrap; }
+    .modal-footer .spacer { flex: 1; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--gray-900); color: white; padding: 10px 22px; border-radius: 99px; font-size: .82rem; font-weight: 600; opacity: 0; transition: all .3s; z-index: 400; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 900px) {
+      .calendar-grid { grid-template-columns: repeat(3, 1fr); }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .modal-body-grid { grid-template-columns: 1fr; }
+      .month-grid { grid-template-columns: repeat(4, 1fr) !important; }
+    }
+    @media (max-width: 600px) {
+      .calendar-grid { grid-template-columns: 1fr 1fr; }
+      .month-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    }
+
+    /* ── Month view ── */
+    .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .month-header-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 2px; }
+    .month-day-header { text-align: center; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); padding: 7px 0; }
+    .month-cell { background: var(--white); border: 1px solid var(--gray-200); border-radius: 7px; min-height: 72px; padding: 7px; cursor: pointer; transition: all .15s; }
+    .month-cell:hover { border-color: var(--green-light); background: var(--green-pale); }
+    .month-cell.is-today { border-color: var(--green); border-width: 2px; background: var(--green-pale); }
+    .month-cell.other-month { opacity: .35; background: var(--gray-50); }
+    .month-day-num { font-size: .8rem; font-weight: 800; color: var(--gray-700); margin-bottom: 5px; }
+    .month-cell.is-today .month-day-num { color: var(--green-dark); }
+    .month-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+    .month-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .month-dot.planifie { background: var(--blue); }
+    .month-dot.en-cours { background: var(--orange); }
+    .month-dot.termine  { background: var(--green); }
+    .month-dot.annule   { background: var(--gray-300); }
+    .month-count { font-size: .62rem; color: var(--gray-500); margin-top: 4px; }
+
+    /* ── Itinerary ── */
+    .itin-wrap { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); }
+    .itin-empty { text-align: center; padding: 60px 20px; color: var(--gray-400); font-size: .9rem; }
+    .itin-item { border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+    .itin-item.status-termine { border-color: #b0dfa0; background: #f8fef5; }
+    .itin-item.status-annule  { opacity: .55; }
+    .itin-time-col { flex-shrink: 0; width: 64px; text-align: center; }
+    .itin-start { font-size: 1.1rem; font-weight: 900; color: var(--gray-900); }
+    .itin-dur   { font-size: .68rem; color: var(--gray-500); }
+    .itin-end   { font-size: .65rem; color: var(--gray-400); }
+    .itin-body { flex: 1; min-width: 0; }
+    .itin-client { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+    .itin-tel    { font-size: .78rem; color: var(--gray-500); margin-bottom: 3px; }
+    .itin-addr   { font-size: .8rem; color: var(--blue); text-decoration: none; margin-bottom: 4px; display: block; word-break: break-word; }
+    .itin-addr:hover { text-decoration: underline; }
+    .itin-svc    { font-size: .8rem; color: var(--gray-500); margin-bottom: 6px; }
+    .itin-acts   { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .itin-total  { flex-shrink: 0; font-weight: 800; font-size: .9rem; color: var(--gray-700); }
+
+    /* ── Recurrence ── */
+    .recur-box { background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 12px 14px; margin-top: 4px; }
+    .recur-hint { font-size: .7rem; color: var(--gray-400); margin-top: 8px; }
+
+    /* ── Weather in day head ── */
+    .day-weather { font-size: .72rem; text-align: center; margin-top: 3px; min-height: 16px; color: var(--gray-700); letter-spacing: 0; }
+    .day-weather-temp { font-size: .62rem; color: var(--gray-400); }
+
+    /* ── Stats tab ── */
+    .pstats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 8px; }
+    .pstats-section { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-200); }
+    .plan-bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 12px 14px 8px; }
+    .plan-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .plan-bar { width: 100%; background: var(--green-light); border-radius: 3px 3px 0 0; min-height: 2px; transition: height .3s; }
+    .plan-bar-val { font-size: .58rem; color: var(--gray-700); font-weight: 700; text-align: center; white-space: nowrap; }
+    .plan-bar-lbl { font-size: .58rem; color: var(--gray-500); text-align: center; white-space: nowrap; }
+
+    /* ── Acompte in facture modal ── */
+    .acompte-wrap { margin-top: 12px; padding: 12px 14px; background: var(--orange-pale); border: 1px solid #ffd0a0; border-radius: 8px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .acompte-wrap label { font-size: .78rem; font-weight: 600; color: var(--orange); white-space: nowrap; }
+    .acompte-wrap input { border: 1.5px solid #ffd0a0; border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: .88rem; width: 110px; background: white; }
+    .acompte-wrap input:focus { outline: none; border-color: var(--orange); }
+    .reste-du-lbl { font-size: .72rem; color: var(--gray-500); }
+    .reste-du-val { font-size: .95rem; font-weight: 800; color: var(--green-dark); }
+
+    @media print {
+      .navbar, .tabs, .week-nav, .toast, .day-add, .ev-btn { display: none !important; }
+      .main { margin-top: 0 !important; padding: 8px !important; }
+      body { background: white !important; }
+      .calendar-grid { gap: 4px !important; }
+      .ev { box-shadow: none !important; border: 1px solid var(--gray-200) !important; cursor: default !important; }
+      .day-col { break-inside: avoid; }
+      #tab-mois, #tab-itin, #tab-factures, #tab-stats { display: none !important; }
+      #tab-planning { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link active">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="clients.html"            class="nav-link">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link">🔧 Matériel</a>
+  </div>
+  <button class="navbar-btn" onclick="openSettings()">⚙ Paramètres</button>
+</nav>
+<div id="autosave-bar" style="display:none;position:fixed;top:62px;right:16px;z-index:900;padding:5px 16px;border-radius:20px;font-size:.72rem;font-weight:600;background:var(--green-dark);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.28);align-items:center;gap:6px;white-space:nowrap;"></div>
+
+<div class="main">
+
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('planning')">📅 Semaine</button>
+    <button class="tab-btn"        onclick="showTab('mois')">📆 Mois</button>
+    <button class="tab-btn"        onclick="showTab('itin')">🗺 Aujourd'hui</button>
+    <button class="tab-btn"        onclick="showTab('factures')">🧾 Factures</button>
+    <button class="tab-btn"        onclick="showTab('stats')">📊 Stats</button>
+  </div>
+
+  <!-- ══════════ PLANNING ══════════ -->
+  <div id="tab-planning" class="tab-pane active">
+    <div class="week-nav">
+      <button class="nav-btn" onclick="moveWeek(-1)">◀ Semaine préc.</button>
+      <h2 id="week-label"></h2>
+      <button class="nav-btn today" onclick="goToday()">Aujourd'hui</button>
+      <button class="nav-btn" onclick="moveWeek(1)">Semaine suiv. ▶</button>
+      <button class="btn btn-primary" style="margin-left:10px;" onclick="openIntModal(today())">+ Intervention</button>
+      <button class="btn btn-secondary btn-sm" style="margin-left:4px;" onclick="window.print()" title="Imprimer la semaine">🖨 Imprimer</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+  </div>
+
+  <!-- ══════════ MOIS ══════════ -->
+  <div id="tab-mois" class="tab-pane">
+    <div class="week-nav">
+      <button class="nav-btn" onclick="moveMonth(-1)">◀ Mois préc.</button>
+      <h2 id="month-label"></h2>
+      <button class="nav-btn today" onclick="goMonthToday()">Ce mois</button>
+      <button class="nav-btn" onclick="moveMonth(1)">Mois suiv. ▶</button>
+    </div>
+    <div class="month-header-row" id="month-head-row"></div>
+    <div class="month-grid" id="month-grid"></div>
+  </div>
+
+  <!-- ══════════ ITINÉRAIRE ══════════ -->
+  <div id="tab-itin" class="tab-pane">
+    <div class="week-nav">
+      <button class="nav-btn" onclick="moveItinDay(-1)">◀ Hier</button>
+      <h2 id="itin-label"></h2>
+      <button class="nav-btn today" onclick="goItinToday()">Aujourd'hui</button>
+      <button class="nav-btn" onclick="moveItinDay(1)">Demain ▶</button>
+      <button class="btn btn-secondary btn-sm" style="margin-left:8px;" onclick="window.print()">🖨 Imprimer</button>
+    </div>
+    <div id="itin-body"></div>
+  </div>
+
+  <!-- ══════════ STATS ══════════ -->
+  <div id="tab-stats" class="tab-pane">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h2 style="font-size:1.05rem;font-weight:800;">📊 Statistiques d'activité</h2>
+    </div>
+    <div class="pstats-section">Cette semaine</div>
+    <div class="pstats-grid" id="pstats-week"></div>
+    <div class="pstats-section">Ce mois — <span id="pstats-month-label"></span></div>
+    <div class="pstats-grid" id="pstats-month"></div>
+    <div class="pstats-section">Depuis le début</div>
+    <div class="pstats-grid" id="pstats-all"></div>
+    <div class="pstats-section">CA mensuel — 6 derniers mois</div>
+    <div class="plan-bars" id="pstats-bars"></div>
+  </div>
+
+  <!-- ══════════ FACTURES ══════════ -->
+  <div id="tab-factures" class="tab-pane">
+    <div class="stats-row" id="fac-stats"></div>
+    <div class="card">
+      <div class="card-header" id="fac-filter-bar">
+        <!-- rendered by JS -->
+      </div>
+      <div id="fac-body" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ MODAL — INTERVENTION ══════════ -->
+<div class="overlay" id="overlay-int">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="int-modal-title">Nouvelle intervention</h2>
+      <span id="int-modal-badge"></span>
+      <button class="modal-close" onclick="closeIntModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-body-grid">
+
+        <!-- LEFT: Client + Planif -->
+        <div>
+          <!-- Sélecteur devis -->
+          <div class="modal-section">
+            <div class="modal-section-title">Sélectionner un client existant</div>
+            <select id="int-devis-select" class="form-input" onchange="fillClientFromDevis(this.value)">
+              <option value="">— Choisir depuis un devis —</option>
+            </select>
+          </div>
+
+          <div class="modal-section">
+            <div class="modal-section-title">Client</div>
+            <div class="fg2" style="gap:10px;">
+              <div class="form-group">
+                <label class="form-label">Prénom</label>
+                <input type="text" class="form-input" id="int-prenom" placeholder="Jean">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nom</label>
+                <input type="text" class="form-input" id="int-nom" placeholder="DUPONT">
+              </div>
+              <div class="form-group f-full">
+                <label class="form-label">Adresse</label>
+                <input type="text" class="form-input" id="int-adresse" placeholder="12 rue des Lilas">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="int-email" placeholder="jean@email.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Téléphone</label>
+                <input type="tel" class="form-input" id="int-tel" placeholder="06 xx xx xx xx">
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <div class="modal-section-title">Planification</div>
+            <div class="fg2" style="gap:10px;">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-input" id="int-date" onchange="updateHeureOptions(this.value)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Heure</label>
+                <select class="form-input" id="int-heure" onchange="checkTimeConflict()"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Durée estimée</label>
+                <select class="form-input" id="int-duree" onchange="updateHeureOptions(document.getElementById('int-date').value);checkTimeConflict()">
+                  <option value="30">30 min</option>
+                  <option value="60" selected>1 h</option>
+                  <option value="90">1 h 30</option>
+                  <option value="120">2 h</option>
+                  <option value="150">2 h 30</option>
+                  <option value="180">3 h</option>
+                  <option value="240">4 h +</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Statut</label>
+                <select class="form-input" id="int-status">
+                  <option value="planifie">Planifié</option>
+                  <option value="en-cours">En cours</option>
+                  <option value="termine">Terminé</option>
+                  <option value="annule">Annulé</option>
+                </select>
+              </div>
+              <div class="form-group f-full">
+                <label class="form-label">Superficie</label>
+                <input type="text" class="form-input" id="int-superficie" placeholder="ex : 500 m²">
+              </div>
+              <div id="int-conflict-msg" class="f-full" style="display:none;background:#fde8e7;border:1.5px solid #f0c0c0;border-radius:8px;padding:10px 14px;color:#c0392b;font-size:.83rem;font-weight:600;grid-column:1/-1;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Services + Totals -->
+        <div>
+          <div class="modal-section">
+            <div class="modal-section-title">Prestations</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+              <select id="int-cat-select" class="form-input" style="flex:1;min-width:160px;"></select>
+              <button class="btn btn-secondary btn-sm" onclick="intAddFromCat()">+ Ajouter</button>
+              <button class="btn btn-secondary btn-sm" onclick="intAddCustom()">+ Perso.</button>
+            </div>
+            <table class="lines-table">
+              <thead><tr>
+                <th class="col-desc">Description</th>
+                <th class="col-qty">Qté</th>
+                <th class="col-pu">Prix u.</th>
+                <th class="col-tot">Total</th>
+                <th class="col-del"></th>
+              </tr></thead>
+              <tbody id="int-lines-body"></tbody>
+            </table>
+            <div style="display:flex;justify-content:flex-end;">
+              <div class="mini-totals">
+                <div class="mt-row"><span class="mt-lbl">Sous-total</span><span class="mt-val" id="int-t-sub">0,00 €</span></div>
+                <div class="mt-row r-total"><span class="mt-lbl">TOTAL</span><span class="mt-val" id="int-t-total">0,00 €</span></div>
+                <div class="sap-row-wrap">
+                  <label class="toggle"><input type="checkbox" id="int-sap" onchange="intUpdateTotals()" checked><span class="toggle-slider"></span></label>
+                  <label for="int-sap">Crédit SAP 50 %</label>
+                </div>
+                <div id="int-sap-rows">
+                  <div class="mt-row r-sap"><span class="mt-lbl">Crédit SAP 50 %</span><span class="mt-val" id="int-t-sap">0,00 €</span></div>
+                  <div class="mt-row r-net"><span class="mt-lbl">Net avec SAP</span><span class="mt-val" id="int-t-net">0,00 €</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <div class="modal-section-title">Notes</div>
+            <textarea class="form-input" id="int-notes" rows="3" style="resize:vertical;" placeholder="Accès, consignes, remarques…"></textarea>
+          </div>
+
+          <div class="modal-section" id="int-recur-section">
+            <div class="modal-section-title">🔄 Récurrence <span style="font-size:.68rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--gray-400);">— nouvelle intervention uniquement</span></div>
+            <div class="recur-box">
+              <div class="fg2" style="gap:10px;">
+                <div class="form-group">
+                  <label class="form-label">Fréquence</label>
+                  <select class="form-input" id="int-recur">
+                    <option value="">Aucune (ponctuel)</option>
+                    <option value="7">Hebdomadaire</option>
+                    <option value="14">Toutes les 2 semaines</option>
+                    <option value="28">Mensuelle (~4 sem.)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Répéter pendant</label>
+                  <select class="form-input" id="int-recur-dur">
+                    <option value="1">1 mois</option>
+                    <option value="2">2 mois</option>
+                    <option value="3" selected>3 mois</option>
+                    <option value="6">6 mois</option>
+                  </select>
+                </div>
+              </div>
+              <div class="recur-hint">Crée automatiquement les interventions suivantes. Masqué en mode édition.</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /grid -->
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="int-btn-del" onclick="deleteIntervention()" style="display:none;">🗑 Supprimer</button>
+      <div class="spacer"></div>
+      <button class="btn btn-secondary" onclick="closeIntModal()">Annuler</button>
+      <button class="btn btn-secondary" onclick="saveIntForm()">💾 Sauvegarder</button>
+      <button class="btn btn-orange" id="int-btn-fac" onclick="createFactureFromInt()">🧾 Générer facture</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL — FACTURE ══════════ -->
+<div class="overlay" id="overlay-fac">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h2 id="fac-modal-title">Facture</h2>
+      <span id="fac-modal-badge"></span>
+      <button class="modal-close" onclick="closeFacModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg2" style="gap:12px;margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">N° facture</label>
+          <input type="text" class="form-input" id="fac-id" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-input" id="fac-status">
+            <option value="brouillon">Brouillon</option>
+            <option value="envoyee">Envoyée</option>
+            <option value="payee">Payée ✓</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date facture</label>
+          <input type="date" class="form-input" id="fac-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Échéance paiement</label>
+          <input type="date" class="form-input" id="fac-echeance">
+        </div>
+      </div>
+
+      <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:8px;">Client</div>
+        <div id="fac-client-recap" style="font-size:.88rem;line-height:1.7;color:var(--gray-700);"></div>
+      </div>
+
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:8px;">Prestations &amp; Montant</div>
+      <div id="fac-lines-recap" style="font-size:.85rem;margin-bottom:8px;"></div>
+      <div class="acompte-wrap" id="acompte-wrap">
+        <label for="fac-acompte">💰 Acompte versé :</label>
+        <input type="number" id="fac-acompte" min="0" step="0.01" placeholder="0,00" oninput="updateRestedu()">
+        <div>
+          <div class="reste-du-lbl">Reste à payer</div>
+          <div class="reste-du-val" id="fac-reste-du">—</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;margin-top:12px;">
+        <label class="form-label">Notes</label>
+        <textarea class="form-input" id="fac-notes" rows="2" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="fac-btn-del" onclick="deleteFacture()" style="display:none;">🗑</button>
+      <div class="spacer"></div>
+      <button class="btn btn-secondary" onclick="closeFacModal()">Annuler</button>
+      <button class="btn btn-secondary" onclick="saveFacForm()">💾 Sauvegarder</button>
+      <button class="btn btn-secondary" onclick="generateFacturePDF(editingFacId)">📄 PDF</button>
+      <button class="btn btn-primary"   onclick="sendFacEmail(editingFacId)">📧 Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings modal ── -->
+<div class="overlay" id="overlay-settings">
+  <div class="modal modal-sm">
+    <div class="modal-head"><h2>⚙ Paramètres</h2><button class="modal-close" onclick="closeSettings()">✕</button></div>
+    <div class="modal-body">
+      <div class="fg2" style="gap:12px;">
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Nom complet</label><input type="text" class="form-input" id="s-nom" placeholder="Mickaël Votre Nom"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Adresse</label><input type="text" class="form-input" id="s-adresse" placeholder="Hermonville 51220"></div>
+        <div class="form-group"><label class="form-label">Téléphone</label><input type="tel" class="form-input" id="s-tel"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="s-email"></div>
+        <div class="form-group"><label class="form-label">SIRET</label><input type="text" class="form-input" id="s-siret"></div>
+        <div class="form-group"><label class="form-label">N° agrément SAP</label><input type="text" class="form-input" id="s-sap"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">IBAN</label><input type="text" class="form-input" id="s-iban"></div>
+        <div style="grid-column:1/-1;padding-top:14px;border-top:1px solid var(--gray-200);">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:10px;">💾 Sauvegarde des données</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="exportBackup()" style="background:var(--green);border-color:var(--green);">💾 Sauvegarder maintenant</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-backup-input').click()">⬆ Restaurer sauvegarde</button>
+            <input type="file" id="import-backup-input" accept=".json" style="display:none;" onchange="importBackup(this)">
+          </div>
+          <div style="margin-top:10px;padding:10px 12px;background:var(--gray-100);border-radius:8px;border:1px solid var(--gray-200);">
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:8px;">📁 Dossier auto-sauvegarde</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="chooseSaveFolder()">📁 Choisir le dossier…</button>
+              <span id="save-folder-name" style="font-size:.78rem;color:var(--gray-500);font-style:italic;">Aucun dossier configuré</span>
+            </div>
+            <div style="font-size:.67rem;color:var(--gray-400);margin-top:6px;">Auto-save <b>toutes les 5 min</b> quand la permission est active. Après un redémarrage, cliquez <b>Réactiver</b> dans la barre en haut à droite ou <b>💾 Sauvegarder maintenant</b>. Chrome &amp; Edge uniquement.</div>
+            <div id="last-save-time" style="font-size:.72rem;margin-top:5px;font-weight:600;"></div>
+          </div>
+          <div style="font-size:.68rem;color:var(--gray-400);margin-top:6px;">Contient : interventions, factures, devis, clients, matériel &amp; paramètres.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><div class="spacer"></div><button class="btn btn-secondary" onclick="closeSettings()">Annuler</button><button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════ CONSTANTS ════════════════════ */
+const CATALOGUE = [
+  { label: 'Tonte pelouse ≤ 100 m²',                               prix: 25  },
+  { label: 'Tonte pelouse 100–200 m²',                             prix: 34  },
+  { label: 'Tonte pelouse 200–350 m²',                             prix: 45  },
+  { label: 'Tonte pelouse 350–500 m²',                             prix: 55  },
+  { label: 'Tonte pelouse 500–750 m²',                             prix: 68  },
+  { label: 'Tonte pelouse 750–1 000 m²',                           prix: 82  },
+  { label: 'Tonte pelouse 1 000–1 500 m²',                         prix: 110 },
+  { label: 'Tonte pelouse 1 500–2 000 m²',                         prix: 135 },
+  { label: 'Souffleur / ramassage de feuilles',                    prix: 35  },
+  { label: 'Débroussaillage',                                      prix: 45  },
+  { label: 'Karcher terrasse / allée',                             prix: 52  },
+  { label: 'Taille de haies',                                      prix: 38  },
+];
+
+const STATUS_INT = { 'planifie': 'Planifié', 'en-cours': 'En cours', 'termine': 'Terminé', 'annule': 'Annulé' };
+const STATUS_FAC = { 'brouillon': 'Brouillon', 'envoyee': 'Envoyée', 'payee': 'Payée' };
+const JOURS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const FAC_FILTERS = [{ k:'tous', l:'Toutes' }, { k:'brouillon', l:'Brouillons' }, { k:'envoyee', l:'Envoyées' }, { k:'payee', l:'Payées' }];
+
+/* ════════════════════ STATE ════════════════════ */
+let interventions = JSON.parse(localStorage.getItem('at-interventions') || '[]');
+let factures      = JSON.parse(localStorage.getItem('at-factures')      || '[]');
+let settings      = JSON.parse(localStorage.getItem('at-settings')      || '{}');
+let devisList     = JSON.parse(localStorage.getItem('at-devis')         || '[]');
+
+let currentWeekStart = getMonday(new Date());
+let currentTab       = 'planning';
+let currentMonthDate = new Date();
+let currentItinDate  = new Date().toISOString().slice(0, 10);
+let editingIntId     = null;
+let editingFacId     = null;
+let currentIntData   = null; // live editing object
+let facFilter        = 'tous';
+let weatherCache     = {}; // date string -> { code, tempMax }
+
+/* ════════════════════ HELPERS ════════════════════ */
+function saveInts()  { localStorage.setItem('at-interventions', JSON.stringify(interventions)); }
+function saveFacs()  { localStorage.setItem('at-factures',      JSON.stringify(factures)); }
+function saveStgs()  { localStorage.setItem('at-settings',      JSON.stringify(settings)); }
+
+function fmt(n)    { return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u202f€'; }
+function fmtPdf(n) { return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202f\u00a0]/g, ' ') + ' €'; }
+function today()   { return new Date().toISOString().slice(0, 10); }
+function timeToMin(t) { const [h,m]=(t||'08:00').split(':').map(Number); return h*60+m; }
+function minToTime(m) { return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
+
+function updateHeureOptions(date, forceVal) {
+  const sel = document.getElementById('int-heure'); if (!sel) return;
+  const prevVal = forceVal !== undefined ? forceVal : (sel.value || '08:00');
+  const durMin  = parseInt(document.getElementById('int-duree')?.value) || 60;
+  // Booked intervals for this date (excluding current intervention)
+  const booked  = interventions
+    .filter(i => i.date === date && i.id !== (currentIntData && currentIntData.id) && i.status !== 'annule')
+    .map(i => ({ start: timeToMin(i.heure||'08:00'), end: timeToMin(i.heure||'08:00') + (i.duree||60), client: `${i.client.prenom||''} ${i.client.nom||''}`.trim() }));
+  // Generate 30-min slots 7h00 → 19h30
+  let html = '';
+  for (let m = 7*60; m <= 19*60; m += 30) {
+    const t = minToTime(m);
+    const overlap = booked.find(b => m < b.end && (m + durMin) > b.start);
+    if (overlap) {
+      const label = `⛔ ${t} — ${overlap.client||'occupé'} (${minToTime(overlap.start)}–${minToTime(overlap.end)})`;
+      html += `<option value="${t}" disabled style="color:#bbb;">${label}</option>`;
+    } else {
+      html += `<option value="${t}">${t}</option>`;
+    }
+  }
+  sel.innerHTML = html;
+  // Restore previous value if still free, otherwise pick first free slot
+  const target = sel.querySelector(`option[value="${prevVal}"]:not([disabled])`);
+  if (target) sel.value = prevVal;
+  else { const first = sel.querySelector('option:not([disabled])'); if (first) sel.value = first.value; }
+}
+function addDays(s, n) { const d = new Date(s); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function fmtDate(s){ if (!s) return '—'; const [y,m,d] = s.split('-'); return `${d}/${m}/${y}`; }
+function esc(s)    { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function nextIntId() {
+  const y = new Date().getFullYear();
+  const nums = interventions.map(i => parseInt((i.id||'').split('-')[2])||0);
+  return `INT-${y}-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3,'0')}`;
+}
+function nextFacId() {
+  const y = new Date().getFullYear();
+  const nums = factures.map(f => parseInt((f.id||'').split('-')[2])||0);
+  return `FAC-${y}-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3,'0')}`;
+}
+
+function showToast(msg, ms = 2600) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function getMonday(d) {
+  const dt = new Date(d); const day = dt.getDay();
+  dt.setDate(dt.getDate() - (day === 0 ? 6 : day - 1));
+  dt.setHours(0,0,0,0); return dt;
+}
+
+/* ════════════════════ TABS ════════════════════ */
+function showTab(t) {
+  currentTab = t;
+  const TABS = ['planning', 'mois', 'itin', 'factures', 'stats'];
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', TABS[i] === t));
+  TABS.forEach(id => { const el = document.getElementById('tab-' + id); if (el) el.classList.toggle('active', id === t); });
+  if (t === 'factures') { renderFacStats(); renderFacFilterBar(); renderFactures(); }
+  if (t === 'planning') { renderCalendar(); fetchWeather(); }
+  if (t === 'mois')     renderMonth();
+  if (t === 'itin')     renderItinerary();
+  if (t === 'stats')    renderPlanStats();
+}
+
+/* ════════════════════ CALENDAR ════════════════════ */
+function moveWeek(n) { currentWeekStart = new Date(currentWeekStart); currentWeekStart.setDate(currentWeekStart.getDate() + n*7); renderCalendar(); }
+function goToday()   { currentWeekStart = getMonday(new Date()); renderCalendar(); }
+
+function renderCalendar() {
+  const todayStr = today();
+  const days = Array.from({length:7}, (_, i) => {
+    const d = new Date(currentWeekStart); d.setDate(d.getDate() + i); return d;
+  });
+
+  // Week label
+  const d0 = days[0], d6 = days[6];
+  const sameMonth = d0.getMonth() === d6.getMonth();
+  document.getElementById('week-label').textContent =
+    `Semaine du ${d0.getDate()}${sameMonth ? '' : ' ' + MOIS[d0.getMonth()]} au ${d6.getDate()} ${MOIS[d6.getMonth()]} ${d6.getFullYear()}`;
+
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = days.map(d => {
+    const ds  = d.toISOString().slice(0,10);
+    const isToday = ds === todayStr;
+    const isPast  = ds < todayStr;
+    const ints = interventions.filter(i => i.date === ds).sort((a,b) => (a.heure||'').localeCompare(b.heure||''));
+
+    const cards = ints.map(i => {
+      const cls   = i.status || 'planifie';
+      const svc   = i.lignes && i.lignes.length ? i.lignes[0].desc : '—';
+      const hasFac = !!i.factureId;
+      return `<div class="ev ${cls}" onclick="openIntModal('${ds}','${i.id}')">
+        <div class="ev-time">${i.heure || ''} ${i.duree ? '· ' + durLabel(i.duree) : ''}</div>
+        <div class="ev-client">${esc(i.client.prenom)} ${esc(i.client.nom)}</div>
+        <div class="ev-svc">${esc(svc)}</div>
+        <div class="ev-footer">
+          <span class="ev-status ${cls}">${STATUS_INT[cls]||cls}</span>
+          <button class="ev-btn ev-btn-edit" onclick="event.stopPropagation();openIntModal('${ds}','${i.id}')">✎</button>
+          <button class="ev-btn ev-btn-fac ${hasFac?'done':''}" onclick="event.stopPropagation();createOrOpenFac('${i.id}')" title="${hasFac?'Voir la facture':'Générer facture'}">${hasFac?'🧾 Facture':'📄 Facturer'}</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="day-col${isToday?' is-today':''}${isPast&&!isToday?' is-past':''}">
+      <div class="day-head">
+        <div class="day-name">${JOURS[d.getDay()]}</div>
+        <div class="day-num">${d.getDate()} ${MOIS[d.getMonth()].slice(0,3)}.</div>
+        <div class="day-weather">${weatherCache[ds] ? wmoToEmoji(weatherCache[ds].code) + ' <span class="day-weather-temp">' + weatherCache[ds].tempMax + '°</span>' : ''}</div>
+      </div>
+      <div class="day-events">
+        ${cards}
+        <button class="day-add" onclick="openIntModal('${ds}')">+ Ajouter</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function durLabel(min) {
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min/60); const m = min%60;
+  return m ? `${h}h${String(m).padStart(2,'0')}` : `${h}h`;
+}
+
+/* ════════════════════ INTERVENTION MODAL ════════════════════ */
+function openIntModal(date, id = null) {
+  editingIntId = id;
+
+  if (id) {
+    currentIntData = JSON.parse(JSON.stringify(interventions.find(x => x.id === id)));
+  } else {
+    currentIntData = {
+      id: nextIntId(), date: date||today(), heure: '08:00', duree: 60,
+      status: 'planifie',
+      client: { prenom:'', nom:'', adresse:'', email:'', tel:'' },
+      lignes: [], sap: true, notes: '', superficie: '', factureId: null
+    };
+  }
+
+  // Populate devis selector
+  const sel = document.getElementById('int-devis-select');
+  sel.innerHTML = '<option value="">— Choisir depuis un devis —</option>' +
+    devisList.map(d => {
+      // Find all interventions linked to this devis (excluding current one being edited)
+      const linked = interventions.filter(i => i.devisRef === d.id && i.id !== (currentIntData && currentIntData.id));
+      let suffix = '';
+      if (linked.length) {
+        const upcoming = linked.filter(i => i.date >= today() && i.status !== 'annule').sort((a,b) => a.date.localeCompare(b.date));
+        const past     = linked.filter(i => i.date <  today() && i.status !== 'annule').sort((a,b) => b.date.localeCompare(a.date));
+        if (upcoming.length) suffix = `  →  planifié le ${fmtDate(upcoming[0].date)}`;
+        else if (past.length) suffix = `  →  passé le ${fmtDate(past[0].date)}`;
+        else if (linked.length) suffix = `  →  ${linked.length} intervention(s)`;
+      }
+      return `<option value="${d.id}">${d.id} — ${d.client.prenom} ${d.client.nom}${suffix}</option>`;
+    }).join('');
+
+  // Fill fields
+  const c = currentIntData.client;
+  document.getElementById('int-prenom').value    = c.prenom  || '';
+  document.getElementById('int-nom').value       = c.nom     || '';
+  document.getElementById('int-adresse').value   = c.adresse || '';
+  document.getElementById('int-email').value     = c.email   || '';
+  document.getElementById('int-tel').value       = c.tel     || '';
+  document.getElementById('int-date').value      = currentIntData.date      || today();
+  document.getElementById('int-duree').value     = currentIntData.duree     || 60;
+  updateHeureOptions(currentIntData.date || today(), currentIntData.heure || '08:00');
+  document.getElementById('int-status').value    = currentIntData.status    || 'planifie';
+  document.getElementById('int-superficie').value = currentIntData.superficie || '';
+  document.getElementById('int-sap').checked     = currentIntData.sap !== false;
+  document.getElementById('int-notes').value     = currentIntData.notes     || '';
+
+  // Populate catalogue select
+  document.getElementById('int-cat-select').innerHTML =
+    '<option value="">— Catalogue —</option>' +
+    CATALOGUE.map((c,i) => `<option value="${i}">${c.label} — ${fmt(c.prix)}</option>`).join('');
+
+  document.getElementById('int-modal-title').textContent = id ? currentIntData.id : 'Nouvelle intervention';
+  document.getElementById('int-modal-badge').innerHTML   = id ? `<span class="status-badge sb-${currentIntData.status||'brouillon'}">${STATUS_INT[currentIntData.status]||''}</span>` : '';
+  document.getElementById('int-btn-del').style.display   = id ? 'inline-flex' : 'none';
+  document.getElementById('int-btn-fac').style.display   = id ? 'inline-flex' : 'none';
+  const rs = document.getElementById('int-recur-section');
+  if (rs) rs.style.display = id ? 'none' : '';
+  if (!id) { const dr = document.getElementById('int-recur'); if (dr) dr.value = ''; }
+
+  renderIntLines();
+  intUpdateTotals();
+  document.getElementById('overlay-int').classList.add('open');
+}
+
+function closeIntModal() { document.getElementById('overlay-int').classList.remove('open'); currentIntData = null; }
+
+function fillClientFromDevis(devisId) {
+  if (!devisId) return;
+  const d = devisList.find(x => x.id === devisId); if (!d) return;
+  document.getElementById('int-prenom').value  = d.client.prenom  || '';
+  document.getElementById('int-nom').value     = d.client.nom     || '';
+  document.getElementById('int-adresse').value = d.client.adresse || '';
+  document.getElementById('int-email').value   = d.client.email   || '';
+  document.getElementById('int-tel').value     = d.client.tel     || '';
+  currentIntData.devisRef = devisId;
+  // Copy lines from devis if current int has no lines
+  if (!currentIntData.lignes.length && d.lignes && d.lignes.length) {
+    currentIntData.lignes = JSON.parse(JSON.stringify(d.lignes));
+    renderIntLines();
+    intUpdateTotals();
+  }
+}
+
+/* ── Lines ── */
+function renderIntLines() {
+  const tbody = document.getElementById('int-lines-body');
+  if (!currentIntData || !currentIntData.lignes.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--gray-300);font-size:.8rem;">Aucune prestation.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = currentIntData.lignes.map((l,i) => `<tr>
+    <td class="col-desc"><input type="text" value="${esc(l.desc)}" oninput="intUpdateLine(${i},'desc',this.value)" placeholder="Description…"></td>
+    <td class="col-qty"><input type="number" value="${l.qty}" min="0" step="0.5" oninput="intUpdateLine(${i},'qty',this.value)" style="text-align:center;"></td>
+    <td class="col-pu"><input type="number" value="${l.pu}" min="0" step="0.5" oninput="intUpdateLine(${i},'pu',this.value)" style="text-align:right;"></td>
+    <td class="col-tot">${fmt(l.qty*l.pu)}</td>
+    <td class="col-del"><button class="del-btn" onclick="intRemoveLine(${i})">✕</button></td>
+  </tr>`).join('');
+}
+
+function intUpdateLine(i, key, val) {
+  if (!currentIntData) return;
+  if (key==='qty'||key==='pu') currentIntData.lignes[i][key] = parseFloat(val)||0;
+  else currentIntData.lignes[i][key] = val;
+  const rows = document.querySelectorAll('#int-lines-body tr');
+  if (rows[i]) { const c = rows[i].querySelector('.col-tot'); if(c) c.textContent = fmt(currentIntData.lignes[i].qty * currentIntData.lignes[i].pu); }
+  intUpdateTotals();
+}
+function intAddFromCat() {
+  const s = document.getElementById('int-cat-select'); const idx = parseInt(s.value); if (isNaN(idx)||idx<0) return;
+  currentIntData.lignes.push({ desc: CATALOGUE[idx].label, qty: 1, pu: CATALOGUE[idx].prix });
+  s.value = ''; renderIntLines(); intUpdateTotals();
+}
+function intAddCustom() { currentIntData.lignes.push({ desc:'', qty:1, pu:0 }); renderIntLines(); intUpdateTotals(); }
+function intRemoveLine(i) { currentIntData.lignes.splice(i,1); renderIntLines(); intUpdateTotals(); }
+
+function intUpdateTotals() {
+  if (!currentIntData) return;
+  const sub   = currentIntData.lignes.reduce((s,l) => s + l.qty*l.pu, 0);
+  const sap   = document.getElementById('int-sap')?.checked;
+  currentIntData.total = sub;
+  document.getElementById('int-t-sub').textContent   = fmt(sub);
+  document.getElementById('int-t-total').textContent = fmt(sub);
+  document.getElementById('int-t-sap').textContent   = fmt(sub/2);
+  document.getElementById('int-t-net').textContent   = fmt(sub/2);
+  const sr = document.getElementById('int-sap-rows');
+  if (sr) sr.style.display = sap ? '' : 'none';
+}
+
+/* ── Save / Delete ── */
+function readIntForm() {
+  if (!currentIntData) return;
+  currentIntData.client.prenom  = document.getElementById('int-prenom').value.trim();
+  currentIntData.client.nom     = document.getElementById('int-nom').value.trim();
+  currentIntData.client.adresse = document.getElementById('int-adresse').value.trim();
+  currentIntData.client.email   = document.getElementById('int-email').value.trim();
+  currentIntData.client.tel     = document.getElementById('int-tel').value.trim();
+  currentIntData.date       = document.getElementById('int-date').value;
+  currentIntData.heure      = document.getElementById('int-heure').value;
+  currentIntData.duree      = parseInt(document.getElementById('int-duree').value)||60;
+  currentIntData.status     = document.getElementById('int-status').value;
+  currentIntData.superficie = document.getElementById('int-superficie').value.trim();
+  currentIntData.sap        = document.getElementById('int-sap').checked;
+  currentIntData.notes      = document.getElementById('int-notes').value.trim();
+  intUpdateTotals();
+}
+
+function checkTimeConflict() {
+  const date   = document.getElementById('int-date')?.value;
+  const heure  = document.getElementById('int-heure')?.value;
+  const durMin = parseInt(document.getElementById('int-duree')?.value) || 60;
+  const msg    = document.getElementById('int-conflict-msg');
+  if (!msg || !date || !heure) return;
+
+  const start  = timeToMin(heure);
+  const end    = start + durMin;
+  const conflicts = interventions.filter(i =>
+    i.date === date &&
+    i.id !== (currentIntData && currentIntData.id) &&
+    i.status !== 'annule' &&
+    start < timeToMin(i.heure||'08:00') + (i.duree||60) &&
+    end   > timeToMin(i.heure||'08:00')
+  );
+
+  if (conflicts.length) {
+    const c = conflicts[0];
+    const cStart = minToTime(timeToMin(c.heure||'08:00'));
+    const cEnd   = minToTime(timeToMin(c.heure||'08:00') + (c.duree||60));
+    const client = `${c.client.prenom||''} ${c.client.nom||''}`.trim() || 'une intervention';
+    msg.style.display = 'block';
+    msg.innerHTML = `⚠️ Créneau non disponible — <strong>${client}</strong> est déjà planifié de <strong>${cStart}</strong> à <strong>${cEnd}</strong> ce jour-là.`;
+  } else {
+    msg.style.display = 'none';
+    msg.textContent = '';
+  }
+}
+
+function saveIntForm() {
+  readIntForm();
+  // Block save if conflict
+  const date   = currentIntData.date;
+  const start  = timeToMin(currentIntData.heure||'08:00');
+  const end    = start + (currentIntData.duree||60);
+  const conflict = interventions.find(i =>
+    i.date === date &&
+    i.id !== currentIntData.id &&
+    i.status !== 'annule' &&
+    start < timeToMin(i.heure||'08:00') + (i.duree||60) &&
+    end   > timeToMin(i.heure||'08:00')
+  );
+  if (conflict) {
+    const cStart = minToTime(timeToMin(conflict.heure||'08:00'));
+    const cEnd   = minToTime(timeToMin(conflict.heure||'08:00') + (conflict.duree||60));
+    const client = `${conflict.client.prenom||''} ${conflict.client.nom||''}`.trim() || 'une intervention';
+    const msg = document.getElementById('int-conflict-msg');
+    if (msg) { msg.style.display='block'; msg.innerHTML=`⚠️ Impossible de sauvegarder — <strong>${client}</strong> occupe ce créneau de <strong>${cStart}</strong> à <strong>${cEnd}</strong>.`; }
+    showToast('⚠️ Créneau déjà occupé !', 3500);
+    return;
+  }
+  const idx = interventions.findIndex(x => x.id === currentIntData.id);
+  if (idx >= 0) interventions[idx] = currentIntData;
+  else          interventions.push(currentIntData);
+
+  // Handle recurrence (new interventions only)
+  const recurDays = parseInt(document.getElementById('int-recur')?.value) || 0;
+  const recurMths = parseInt(document.getElementById('int-recur-dur')?.value) || 3;
+  let recurCount  = 0;
+  if (recurDays > 0 && !editingIntId) {
+    const endDate = addMonths(currentIntData.date, recurMths);
+    let nextDate  = addDays(currentIntData.date, recurDays);
+    while (nextDate <= endDate && recurCount < 52) {
+      const copy = JSON.parse(JSON.stringify(currentIntData));
+      copy.id = nextIntId(); copy.date = nextDate; copy.factureId = null;
+      interventions.push(copy);
+      nextDate = addDays(nextDate, recurDays);
+      recurCount++;
+    }
+  }
+
+  saveInts();
+  closeIntModal();
+  renderCalendar();
+  showToast(recurCount > 0 ? `✓ ${recurCount + 1} interventions créées (récurrence)` : '✓ Intervention sauvegardée');
+}
+
+function deleteIntervention() {
+  if (!editingIntId || !confirm(`Supprimer cette intervention ?`)) return;
+  interventions = interventions.filter(x => x.id !== editingIntId);
+  saveInts(); closeIntModal(); renderCalendar();
+  showToast('Intervention supprimée');
+}
+
+/* ════════════════════ FACTURE GENERATION ════════════════════ */
+function createOrOpenFac(intId) {
+  const int = interventions.find(x => x.id === intId);
+  if (!int) return;
+  if (int.factureId) {
+    const f = factures.find(x => x.id === int.factureId);
+    if (f) { openFacModal(f.id); return; }
+  }
+  // Save intervention first
+  if (currentIntData && currentIntData.id === intId) readIntForm();
+  createFactureFromIntId(intId);
+}
+
+function createFactureFromInt() {
+  readIntForm();
+  const idx = interventions.findIndex(x => x.id === currentIntData.id);
+  if (idx >= 0) interventions[idx] = currentIntData; else interventions.push(currentIntData);
+  saveInts();
+  createFactureFromIntId(currentIntData.id);
+  closeIntModal();
+}
+
+function createFactureFromIntId(intId) {
+  const int = interventions.find(x => x.id === intId); if (!int) return;
+  if (int.factureId) { openFacModal(int.factureId); return; }
+
+  const fac = {
+    id:            nextFacId(),
+    interventionId: intId,
+    date:          today(),
+    echeance:      addDays(today(), 30),
+    status:        'brouillon',
+    client:        JSON.parse(JSON.stringify(int.client)),
+    lignes:        JSON.parse(JSON.stringify(int.lignes || [])),
+    sap:           int.sap !== false,
+    total:         int.total || 0,
+    notes:         '',
+  };
+  factures.push(fac);
+  saveFacs();
+  int.factureId = fac.id;
+  saveInts();
+  renderCalendar();
+  openFacModal(fac.id);
+  showToast('🧾 Facture créée !');
+}
+
+/* ── Facture modal ── */
+function openFacModal(facId) {
+  editingFacId = facId;
+  const f = factures.find(x => x.id === facId); if (!f) return;
+
+  document.getElementById('fac-id').value       = f.id;
+  document.getElementById('fac-status').value   = f.status || 'brouillon';
+  document.getElementById('fac-date').value     = f.date      || today();
+  document.getElementById('fac-echeance').value = f.echeance  || addDays(today(),30);
+  document.getElementById('fac-notes').value    = f.notes     || '';
+  document.getElementById('fac-acompte').value  = f.acompte > 0 ? f.acompte : '';
+  document.getElementById('fac-modal-title').textContent = f.id;
+  document.getElementById('fac-modal-badge').innerHTML   = `<span class="status-badge sb-${f.status||'brouillon'}">${STATUS_FAC[f.status]||f.status}</span>`;
+  document.getElementById('fac-btn-del').style.display = 'inline-flex';
+
+  updateRestedu();
+
+  // Client recap
+  const c = f.client;
+  document.getElementById('fac-client-recap').innerHTML =
+    `<strong>${esc(c.prenom)} ${esc(c.nom)}</strong><br>${esc(c.adresse||'')}${c.email?`<br>${esc(c.email)}`:''}${c.tel?`<br>${esc(c.tel)}`:''}`;
+
+  // Lines recap
+  const sub = f.lignes.reduce((s,l)=>s+l.qty*l.pu,0);
+  let html = `<table style="width:100%;font-size:.82rem;border-collapse:collapse;">`;
+  f.lignes.forEach(l => {
+    html += `<tr><td style="padding:4px 0;color:var(--gray-700);">${esc(l.desc)}</td><td style="text-align:right;font-weight:600;white-space:nowrap;">${fmt(l.qty*l.pu)}</td></tr>`;
+  });
+  html += `<tr style="border-top:1px solid var(--gray-200);"><td style="padding-top:6px;font-weight:700;">TOTAL</td><td style="text-align:right;font-weight:800;padding-top:6px;">${fmt(sub)}</td></tr>`;
+  if (f.sap) {
+    html += `<tr style="color:var(--green);"><td style="font-size:.78rem;">Net avec SAP 50 %</td><td style="text-align:right;font-weight:700;">${fmt(sub/2)}</td></tr>`;
+  }
+  html += `</table>`;
+  document.getElementById('fac-lines-recap').innerHTML = html;
+
+  document.getElementById('overlay-fac').classList.add('open');
+}
+
+function closeFacModal() { document.getElementById('overlay-fac').classList.remove('open'); }
+
+function saveFacForm() {
+  const f = factures.find(x => x.id === editingFacId); if (!f) return;
+  f.status   = document.getElementById('fac-status').value;
+  f.date     = document.getElementById('fac-date').value;
+  f.echeance = document.getElementById('fac-echeance').value;
+  f.notes    = document.getElementById('fac-notes').value.trim();
+  f.acompte  = parseFloat(document.getElementById('fac-acompte')?.value) || 0;
+  saveFacs();
+  document.getElementById('fac-modal-badge').innerHTML = `<span class="status-badge sb-${f.status}">${STATUS_FAC[f.status]||f.status}</span>`;
+  if (currentTab === 'factures') { renderFacStats(); renderFactures(); }
+  showToast('✓ Facture sauvegardée');
+}
+
+function deleteFacture() {
+  if (!editingFacId || !confirm('Supprimer cette facture ?')) return;
+  const f = factures.find(x => x.id === editingFacId);
+  if (f && f.interventionId) {
+    const int = interventions.find(x => x.id === f.interventionId);
+    if (int) { int.factureId = null; saveInts(); }
+  }
+  factures = factures.filter(x => x.id !== editingFacId);
+  saveFacs(); closeFacModal(); renderCalendar();
+  if (currentTab === 'factures') { renderFacStats(); renderFactures(); }
+}
+
+/* ════════════════════ FACTURES LIST ════════════════════ */
+function renderFacStats() {
+  const total  = factures.length;
+  const ca     = factures.filter(f=>f.status==='payee').reduce((s,f)=>s+(f.total||0),0);
+  const envoy  = factures.filter(f=>f.status==='envoyee').length;
+  const payees = factures.filter(f=>f.status==='payee').length;
+  document.getElementById('fac-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Total factures</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card"><div class="stat-lbl">CA encaissé</div><div class="stat-val">${fmt(ca)}</div><div class="stat-sub">factures payées</div></div>
+    <div class="stat-card"><div class="stat-lbl">En attente</div><div class="stat-val">${envoy}</div><div class="stat-sub">envoyées non payées</div></div>
+    <div class="stat-card"><div class="stat-lbl">Payées</div><div class="stat-val">${payees}</div></div>`;
+}
+
+function renderFacFilterBar() {
+  document.getElementById('fac-filter-bar').innerHTML =
+    FAC_FILTERS.map(f => {
+      const count = f.k==='tous' ? factures.length : factures.filter(x=>x.status===f.k).length;
+      return `<button class="tab-btn${f.k===facFilter?' active':''}" style="border:none;" onclick="setFacFilter('${f.k}')">${f.l} <span style="opacity:.6;font-size:.72rem;">(${count})</span></button>`;
+    }).join('');
+}
+
+function setFacFilter(k) { facFilter=k; renderFacFilterBar(); renderFactures(); }
+
+function renderFactures() {
+  let list = factures.slice().reverse();
+  if (facFilter !== 'tous') list = list.filter(f => f.status === facFilter);
+
+  const el = document.getElementById('fac-body');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>Aucune facture.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<table class="ftable">
+    <thead><tr><th>N°</th><th>Client</th><th>Date</th><th>Échéance</th><th>Montant</th><th>SAP</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>${list.map(f => `
+      <tr onclick="openFacModal('${f.id}')">
+        <td><strong>${f.id}</strong></td>
+        <td>${esc(f.client.prenom)} ${esc(f.client.nom)}</td>
+        <td style="color:var(--gray-500)">${fmtDate(f.date)}</td>
+        <td style="color:${f.echeance<today()&&f.status!=='payee'?'var(--red)':'var(--gray-500)'}">${fmtDate(f.echeance)}</td>
+        <td><strong>${fmt(f.total||0)}</strong>${f.sap?`<br><span style="font-size:.72rem;color:var(--green);">net SAP : ${fmt((f.total||0)/2)}</span>`:''}${f.acompte>0?`<br><span style="font-size:.72rem;color:var(--orange);">Acompte : ${fmt(f.acompte)}</span><br><span style="font-size:.72rem;color:var(--green-dark);">Reste : ${fmt((f.total||0)-f.acompte)}</span>`:''}</td>
+        <td>${f.sap?'<span style="color:var(--green);font-weight:700;">✓</span>':'<span style="color:var(--gray-300)">—</span>'}</td>
+        <td><span class="status-badge sb-${f.status||'brouillon'}">${STATUS_FAC[f.status]||f.status}</span></td>
+        <td onclick="event.stopPropagation()">
+          <div class="tbl-acts">
+            <button class="act-btn pdf"  onclick="generateFacturePDF('${f.id}')">📄 PDF</button>
+            <button class="act-btn mail" onclick="sendFacEmail('${f.id}')">📧</button>
+            <button class="act-btn del"  onclick="if(confirm('Supprimer ?')){deleteFacById('${f.id}');}">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function deleteFacById(id) {
+  const f = factures.find(x=>x.id===id);
+  if (f && f.interventionId) { const int = interventions.find(x=>x.id===f.interventionId); if(int){int.factureId=null;saveInts();} }
+  factures = factures.filter(x=>x.id!==id); saveFacs(); renderFacStats(); renderFacFilterBar(); renderFactures();
+}
+
+/* ════════════════════ EMAIL ════════════════════ */
+function sendFacEmail(id) {
+  const f = factures.find(x=>x.id===id); if (!f) return;
+  saveFacForm();
+  const subj = encodeURIComponent(`Facture Allo Tonte — ${f.id}`);
+  const body = encodeURIComponent(
+    `Bonjour ${f.client.prenom},\n\nVeuillez trouver ci-joint votre facture ${f.id} d'un montant de ${fmt(f.total)}.\n` +
+    (f.sap ? `\nGrâce au crédit d'impôt SAP, votre reste à charge est de ${fmt((f.total||0)/2)} seulement.\n` : '') +
+    (settings.iban ? `\nRèglement par virement : ${settings.iban}\n` : '') +
+    `\nCordialement,\n${settings.nom||'Allo Tonte'}\n${settings.tel||'07 56 95 15 66'}`
+  );
+  const to = f.client.email ? encodeURIComponent(f.client.email) : '';
+  window.location.href = `mailto:${to}?subject=${subj}&body=${body}`;
+  f.status = 'envoyee'; saveFacs();
+  if (currentTab==='factures') { renderFacStats(); renderFactures(); }
+  document.getElementById('fac-status').value = 'envoyee';
+  document.getElementById('fac-modal-badge').innerHTML = `<span class="status-badge sb-envoyee">Envoyée</span>`;
+}
+
+/* ════════════════════ PDF ════════════════════ */
+async function generateFacturePDF(id) {
+  saveFacForm();
+  const f = factures.find(x=>x.id===id); if (!f) return;
+  showToast('⏳ Génération PDF…', 4000);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W=210, M=18, CW=W-M*2;
+  let y = M;
+  const s = settings;
+
+  // Logo
+  try { const b64 = await imgToBase64('allotonte-removebg-preview.png'); if(b64) doc.addImage(b64,'PNG',M,y,42,17); } catch(e){}
+
+  // Company info
+  doc.setFontSize(8.5); doc.setTextColor(80,80,80);
+  const cLines = [s.nom||'Allo Tonte', s.adresse||'Hermonville 51220', s.tel||'', s.email||'', s.siret?`SIRET : ${s.siret}`:'', s.sap?`Agrement SAP : ${s.sap}`:'' ].filter(Boolean);
+  cLines.forEach((l,i) => { doc.setFont(undefined, i===0?'bold':'normal'); doc.text(l, W-M, y+4+i*4.5, {align:'right'}); });
+  doc.setFont(undefined,'normal');
+  y += 24;
+
+  // Divider
+  doc.setDrawColor(30,92,10); doc.setLineWidth(0.5); doc.line(M,y,W-M,y); y+=7;
+
+  // FACTURE title
+  doc.setFontSize(18); doc.setFont(undefined,'bold'); doc.setTextColor(21,61,7);
+  doc.text('FACTURE', W/2, y, {align:'center'}); y+=8;
+
+  // Status stamp if payée
+  if (f.status === 'payee') {
+    doc.setFontSize(22); doc.setTextColor(30,130,30); doc.setFont(undefined,'bold');
+    doc.text('PAYEE', W-M, y-4, {align:'right'});
+  }
+  doc.setFont(undefined,'normal'); doc.setTextColor(40,40,40);
+
+  // Client + Facture meta
+  const colW = (CW-8)/2; const metX = M+colW+8;
+  doc.setFillColor(248,250,247);
+  doc.roundedRect(M,y,colW,38,2,2,'F');
+  doc.setFontSize(7); doc.setTextColor(100,130,100); doc.setFont(undefined,'bold');
+  doc.text('CLIENT', M+4, y+5);
+  doc.setFont(undefined,'normal'); doc.setFontSize(10); doc.setTextColor(20,20,20);
+  doc.text(`${f.client.prenom} ${f.client.nom}`.toUpperCase(), M+4, y+11);
+  doc.setFontSize(8.5); doc.setTextColor(60,60,60);
+  [f.client.adresse, f.client.email, f.client.tel].filter(Boolean).forEach((l,i) => doc.text(l, M+4, y+17+i*5));
+
+  doc.setFillColor(248,250,247);
+  doc.roundedRect(metX,y,colW,38,2,2,'F');
+  doc.setFontSize(7); doc.setTextColor(100,130,100); doc.setFont(undefined,'bold');
+  doc.text('FACTURE', metX+4, y+5);
+  doc.setFont(undefined,'normal'); doc.setFontSize(11); doc.setTextColor(20,20,20);
+  doc.text(f.id, metX+4, y+11);
+  doc.setFontSize(8.5); doc.setTextColor(60,60,60);
+  doc.text(`Date : ${fmtDate(f.date)}`, metX+4, y+18);
+  doc.text(`Echeance : ${fmtDate(f.echeance)}`, metX+4, y+23);
+  const sc = {brouillon:[150,150,150],envoyee:[37,99,235],payee:[30,92,10]}[f.status]||[100,100,100];
+  doc.setFillColor(...sc); doc.roundedRect(metX+4, y+30, 32, 5.5, 1,1,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont(undefined,'bold');
+  doc.text((STATUS_FAC[f.status]||f.status).toUpperCase(), metX+4+16, y+34, {align:'center'});
+  doc.setFont(undefined,'normal');
+  y += 46;
+
+  // Table
+  doc.autoTable({
+    startY: y,
+    head: [['Description', 'Qté', 'Prix unitaire', 'Total']],
+    body: f.lignes.map(l => [l.desc, l.qty%1===0?String(l.qty):l.qty.toLocaleString('fr-FR'), fmtPdf(l.pu), fmtPdf(l.qty*l.pu)]),
+    margin: {left:M, right:M},
+    headStyles: {fillColor:[21,61,7], textColor:255, fontStyle:'bold', fontSize:8.5},
+    bodyStyles: {fontSize:8.5, textColor:[40,40,40]},
+    alternateRowStyles: {fillColor:[249,252,248]},
+    columnStyles: { 0:{cellWidth:'auto'}, 1:{cellWidth:16,halign:'center'}, 2:{cellWidth:28,halign:'right'}, 3:{cellWidth:28,halign:'right',fontStyle:'bold'} },
+    tableLineColor:[220,230,220], tableLineWidth:0.2,
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  // Totals
+  const sub = f.lignes.reduce((s,l)=>s+l.qty*l.pu,0);
+  const tX=W-M-72, tW=72;
+  const tRow = (lbl,val,bold,bg,tc) => {
+    if(bg) doc.setFillColor(...bg); else doc.setFillColor(255,255,255);
+    doc.rect(tX,y,tW,7,bg?'FD':'S');
+    doc.setDrawColor(220,230,220); doc.setLineWidth(0.2); doc.rect(tX,y,tW,7);
+    doc.setFontSize(8.5); doc.setFont(undefined,bold?'bold':'normal'); doc.setTextColor(...(tc||[40,40,40]));
+    doc.text(lbl, tX+3, y+4.8); doc.text(val, tX+tW-3, y+4.8, {align:'right'});
+    doc.setFont(undefined,'normal'); y+=7;
+  };
+  tRow('TOTAL', fmtPdf(sub), true, [21,61,7], [255,255,255]);
+  if (f.sap) {
+    tRow("Credit d'impot SAP 50 %", `- ${fmtPdf(sub/2)}`, false, [232,248,224], [30,92,10]);
+    tRow('Net a payer avec SAP', fmtPdf(sub/2), true, [240,255,235], [21,61,7]);
+  }
+  y += 8;
+
+  // Notes
+  if (f.notes) {
+    doc.setFontSize(8); doc.setTextColor(80,80,80); doc.setFont(undefined,'bold');
+    doc.text('Notes :', M, y); y+=4;
+    doc.setFont(undefined,'normal');
+    const nl = doc.splitTextToSize(f.notes, CW);
+    doc.text(nl, M, y); y += nl.length*4.5+6;
+  }
+
+  // SAP legal
+  if (f.sap && s.sap) {
+    doc.setFontSize(7.5); doc.setTextColor(50,100,50); doc.setFont(undefined,'italic');
+    const st = `Prestataire agree Services a la Personne (${s.sap}). Les prestations d'entretien de jardin ouvrent droit a un credit d'impot de 50 % (art. 199 sexdecies CGI), dans la limite de 5 000 EUR/an.`;
+    const sl = doc.splitTextToSize(st, CW); doc.text(sl, M, y); y += sl.length*4+6;
+    doc.setFont(undefined,'normal');
+  }
+
+  // Payment info
+  if (s.iban) {
+    doc.setFontSize(8); doc.setTextColor(40,40,40); doc.setFont(undefined,'bold');
+    doc.text('Reglement par virement :', M, y); y+=5;
+    doc.setFont(undefined,'normal'); doc.text(s.iban, M, y); y+=8;
+  }
+
+  // Footer
+  doc.setFontSize(7); doc.setTextColor(160,160,160);
+  doc.line(M,284,W-M,284);
+  doc.text([s.nom||'Allo Tonte', s.adresse||'Hermonville 51220', s.siret?`SIRET ${s.siret}`:''].filter(Boolean).join('  ·  '), W/2, 288, {align:'center'});
+
+  doc.save(`Facture-${f.id}-${(f.client.nom||'client').replace(/\s+/g,'_')}.pdf`);
+  showToast(`✓ PDF généré : ${f.id}`);
+}
+
+async function imgToBase64(src) {
+  return new Promise(resolve => {
+    const img = new Image(); img.onload = () => { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); resolve(c.toDataURL('image/png')); }; img.onerror=()=>resolve(null); img.src=src;
+  });
+}
+
+/* ════════════════════ SETTINGS ════════════════════ */
+function openSettings() {
+  document.getElementById('s-nom').value     = settings.nom     || '';
+  document.getElementById('s-adresse').value = settings.adresse || 'Hermonville 51220';
+  document.getElementById('s-tel').value     = settings.tel     || '';
+  document.getElementById('s-email').value   = settings.email   || 'allotonte@gmail.com';
+  document.getElementById('s-siret').value   = settings.siret   || '';
+  document.getElementById('s-sap').value     = settings.sap     || '';
+  document.getElementById('s-iban').value    = settings.iban    || '';
+  document.getElementById('overlay-settings').classList.add('open');
+}
+function closeSettings() { document.getElementById('overlay-settings').classList.remove('open'); }
+function saveSettings() {
+  settings.nom=document.getElementById('s-nom').value.trim();
+  settings.adresse=document.getElementById('s-adresse').value.trim();
+  settings.tel=document.getElementById('s-tel').value.trim();
+  settings.email=document.getElementById('s-email').value.trim();
+  settings.siret=document.getElementById('s-siret').value.trim();
+  settings.sap=document.getElementById('s-sap').value.trim();
+  settings.iban=document.getElementById('s-iban').value.trim();
+  saveStgs(); closeSettings(); showToast('✓ Paramètres enregistrés');
+}
+['overlay-int','overlay-fac','overlay-settings'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) { if(e.target===this) { if(id==='overlay-int') closeIntModal(); else if(id==='overlay-fac') closeFacModal(); else closeSettings(); }});
+});
+
+/* ════════════════════ MONTH VIEW ════════════════════ */
+function renderMonth() {
+  const y = currentMonthDate.getFullYear();
+  const m = currentMonthDate.getMonth();
+  const capFirst = s => s.charAt(0).toUpperCase() + s.slice(1);
+  document.getElementById('month-label').textContent = `${capFirst(MOIS[m])} ${y}`;
+  const DOWS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  document.getElementById('month-head-row').innerHTML = DOWS.map(d => `<div class="month-day-header">${d}</div>`).join('');
+  const first = new Date(y, m, 1);
+  const last  = new Date(y, m + 1, 0);
+  const todayStr = today();
+  let startDow = first.getDay(); if (startDow === 0) startDow = 7; startDow--;
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push({ date: new Date(y, m, 1 - (startDow - i)), cur: false });
+  for (let d = 1; d <= last.getDate(); d++) cells.push({ date: new Date(y, m, d), cur: true });
+  let extra = 1;
+  while (cells.length % 7 !== 0) cells.push({ date: new Date(y, m + 1, extra++), cur: false });
+  document.getElementById('month-grid').innerHTML = cells.map(cell => {
+    const ds   = cell.date.toISOString().slice(0, 10);
+    const ints = interventions.filter(i => i.date === ds && i.status !== 'annule');
+    const dots = ints.map(i => `<div class="month-dot ${i.status || 'planifie'}"></div>`).join('');
+    return `<div class="month-cell${ds === todayStr ? ' is-today' : ''}${!cell.cur ? ' other-month' : ''}" onclick="goToWeekOfDate('${ds}')">
+      <div class="month-day-num">${cell.date.getDate()}</div>
+      <div class="month-dots">${dots}</div>
+      ${ints.length > 5 ? `<div class="month-count">${ints.length} interventions</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function moveMonth(n)    { currentMonthDate = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + n, 1); renderMonth(); }
+function goMonthToday()  { currentMonthDate = new Date(); renderMonth(); }
+function goToWeekOfDate(ds) { currentWeekStart = getMonday(new Date(ds)); showTab('planning'); }
+
+/* ════════════════════ ITINÉRAIRE ════════════════════ */
+function renderItinerary() {
+  const ds = currentItinDate;
+  const d  = new Date(ds + 'T00:00:00');
+  document.getElementById('itin-label').textContent =
+    `${JOURS[d.getDay() === 0 ? 0 : d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
+  const dayInts = interventions.filter(i => i.date === ds).sort((a, b) => (a.heure || '').localeCompare(b.heure || ''));
+  const body = document.getElementById('itin-body');
+  if (!dayInts.length) {
+    body.innerHTML = `<div class="itin-wrap"><div class="itin-empty">📭 Aucune intervention prévue ce jour.<br><br><button class="btn btn-primary btn-sm" onclick="openIntModal('${ds}')">+ Planifier une intervention</button></div></div>`;
+    return;
+  }
+  const totalCA = dayInts.reduce((s, i) => s + (i.total || 0), 0);
+  const items = dayInts.map(i => {
+    const cls    = i.status || 'planifie';
+    const svc    = i.lignes && i.lignes.length ? i.lignes.map(l => l.desc).join(', ') : '—';
+    const endT   = minToTime(timeToMin(i.heure || '08:00') + (i.duree || 60));
+    const maps   = i.client.adresse ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(i.client.adresse)}` : '';
+    const hasFac = !!i.factureId;
+    const badgeCls = cls === 'planifie' ? 'sb-brouillon' : cls === 'en-cours' ? 'sb-envoyee' : cls === 'termine' ? 'sb-payee' : 'sb-brouillon';
+    return `<div class="itin-item status-${cls}">
+      <div class="itin-time-col">
+        <div class="itin-start">${i.heure || '—'}</div>
+        <div class="itin-dur">${durLabel(i.duree || 60)}</div>
+        <div class="itin-end">fin ${endT}</div>
+      </div>
+      <div class="itin-body">
+        <div class="itin-client">${esc(i.client.prenom)} ${esc(i.client.nom)}</div>
+        ${i.client.tel ? `<div class="itin-tel">📞 ${esc(i.client.tel)}</div>` : ''}
+        ${maps ? `<a class="itin-addr" href="${maps}" target="_blank" rel="noopener">📍 ${esc(i.client.adresse)}</a>` : '<div class="itin-svc" style="color:var(--gray-400)">Adresse non renseignée</div>'}
+        <div class="itin-svc">🌿 ${esc(svc)}</div>
+        <div class="itin-acts">
+          <span class="status-badge ${badgeCls}">${STATUS_INT[cls]}</span>
+          <button class="act-btn btn-sm" onclick="openIntModal('${ds}','${i.id}')">✎ Modifier</button>
+          <button class="act-btn pdf btn-sm" onclick="createOrOpenFac('${i.id}')">${hasFac ? '🧾 Facture' : '📄 Facturer'}</button>
+          <button class="act-btn btn-sm" style="color:var(--gray-600);border-color:var(--gray-300);" onclick="generateFichePDF('${i.id}')">📋 Fiche PDF</button>
+          ${cls !== 'termine' ? `<button class="act-btn btn-sm" style="color:var(--green);border-color:#b0e0a0;" onclick="markDone('${i.id}')">✓ Terminé</button>` : ''}
+        </div>
+      </div>
+      <div class="itin-total">${fmt(i.total || 0)}</div>
+    </div>`;
+  }).join('');
+  body.innerHTML = `<div class="itin-wrap">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--gray-200);">
+      <span style="font-weight:700;">${dayInts.length} intervention${dayInts.length > 1 ? 's' : ''}</span>
+      <span style="flex:1;"></span>
+      <span style="font-size:.82rem;color:var(--gray-500);">CA estimé : <strong style="color:var(--gray-900);">${fmt(totalCA)}</strong></span>
+      <button class="btn btn-primary btn-sm" onclick="openIntModal('${ds}')">+ Ajouter</button>
+    </div>
+    ${items}
+  </div>`;
+}
+function moveItinDay(n) { currentItinDate = addDays(currentItinDate, n); renderItinerary(); }
+function goItinToday()  { currentItinDate = today(); renderItinerary(); }
+function markDone(intId) {
+  const int = interventions.find(x => x.id === intId); if (!int) return;
+  int.status = 'termine'; saveInts(); renderItinerary(); renderCalendar();
+  showToast('✓ Intervention marquée terminée');
+}
+
+/* ════════════════════ HELPERS EXTRA ════════════════════ */
+function addMonths(s, n) { const d = new Date(s + 'T00:00:00'); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10); }
+
+/* ════════════════════ MÉTÉO ════════════════════ */
+async function fetchWeather() {
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=49.271&longitude=3.944&daily=weathercode,temperature_2m_max&timezone=Europe%2FParis&forecast_days=16';
+    const res  = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.daily) return;
+    data.daily.time.forEach((date, i) => {
+      weatherCache[date] = { code: data.daily.weathercode[i], tempMax: Math.round(data.daily.temperature_2m_max[i]) };
+    });
+    if (currentTab === 'planning') renderCalendar();
+  } catch(e) { /* silently ignore if offline */ }
+}
+function wmoToEmoji(code) {
+  if (code === 0)       return '☀️';
+  if (code <= 2)        return '🌤';
+  if (code === 3)       return '☁️';
+  if (code <= 48)       return '🌫';
+  if (code <= 55)       return '🌦';
+  if (code <= 67)       return '🌧';
+  if (code <= 77)       return '❄️';
+  if (code <= 82)       return '🌦';
+  if (code <= 86)       return '🌨';
+  return '⛈';
+}
+
+/* ════════════════════ STATS PLANNING ════════════════════ */
+function renderPlanStats() {
+  const todayStr   = today();
+  const monDate    = getMonday(new Date());
+  const monStr     = monDate.toISOString().slice(0,10);
+  const sunStr     = addDays(monStr, 6);
+  const thisMonth  = todayStr.slice(0,7);
+
+  const statCard = (lbl, val, sub) =>
+    `<div class="stat-card"><div class="stat-lbl">${lbl}</div><div class="stat-val">${val}</div>${sub?`<div class="stat-sub">${sub}</div>`:''}</div>`;
+
+  // Week stats
+  const wInts = interventions.filter(i => i.date >= monStr && i.date <= sunStr && i.status !== 'annule');
+  document.getElementById('pstats-week').innerHTML =
+    statCard('Interventions', wInts.length, `${wInts.filter(i=>i.status==='termine').length} terminées`) +
+    statCard('CA estimé', fmt(wInts.reduce((s,i)=>s+(i.total||0),0))) +
+    statCard('Heures terrain', durLabel(wInts.reduce((s,i)=>s+(i.duree||0),0)));
+
+  // Month stats
+  const now = new Date();
+  document.getElementById('pstats-month-label').textContent = MOIS[now.getMonth()] + ' ' + now.getFullYear();
+  const mInts = interventions.filter(i => (i.date||'').startsWith(thisMonth) && i.status !== 'annule');
+  const mFac  = factures.filter(f => (f.date||'').startsWith(thisMonth) && f.status === 'payee').reduce((s,f)=>s+(f.total||0),0);
+  document.getElementById('pstats-month').innerHTML =
+    statCard('Interventions', mInts.length, `${mInts.filter(i=>i.status==='termine').length} terminées`) +
+    statCard('CA interventions', fmt(mInts.reduce((s,i)=>s+(i.total||0),0))) +
+    statCard('Encaissé', fmt(mFac), 'factures payées');
+
+  // All-time stats
+  const allInts = interventions.filter(i => i.status !== 'annule');
+  const allFac  = factures.filter(f => f.status === 'payee').reduce((s,f)=>s+(f.total||0),0);
+  document.getElementById('pstats-all').innerHTML =
+    statCard('Total interventions', allInts.length, `${interventions.filter(i=>i.status==='termine').length} terminées`) +
+    statCard('CA total estimé', fmt(allInts.reduce((s,i)=>s+(i.total||0),0))) +
+    statCard('Total encaissé', fmt(allFac), 'factures payées');
+
+  // Bar chart: last 6 months
+  const months = Array.from({length:6}, (_,i) => {
+    const d   = new Date(now.getFullYear(), now.getMonth()-(5-i), 1);
+    const key = d.toISOString().slice(0,7);
+    const lbl = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(2)}`;
+    const val = interventions.filter(i => i.status!=='annule' && (i.date||'').startsWith(key)).reduce((s,i)=>s+(i.total||0),0);
+    return {lbl, val};
+  });
+  const maxV = Math.max(...months.map(m=>m.val), 1);
+  document.getElementById('pstats-bars').innerHTML = months.map(m => {
+    const h = Math.max(2, Math.round(m.val/maxV*90));
+    return `<div class="plan-bar-wrap">
+      <div class="plan-bar-val">${m.val>0?Math.round(m.val)+'€':''}</div>
+      <div class="plan-bar" style="height:${h}px;" title="${m.lbl} : ${fmt(m.val)}"></div>
+      <div class="plan-bar-lbl">${m.lbl}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════ PDF FICHE CLIENT ════════════════════ */
+async function generateFichePDF(intId) {
+  const int = interventions.find(x => x.id === intId); if (!int) return;
+  showToast('⏳ Génération fiche…', 3000);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W=210, M=18, CW=W-M*2;
+  let y = M;
+  const s = settings;
+
+  try { const b64 = await imgToBase64('allotonte-removebg-preview.png'); if(b64) doc.addImage(b64,'PNG',M,y,36,14); } catch(e){}
+  doc.setFontSize(8); doc.setTextColor(80,80,80);
+  [s.nom||'Allo Tonte', s.adresse||'Hermonville 51220', s.tel||'', s.email||''].filter(Boolean).forEach((l,i) => {
+    doc.setFont(undefined, i===0?'bold':'normal'); doc.text(l, W-M, y+3+i*4, {align:'right'});
+  });
+  y+=22;
+  doc.setDrawColor(30,92,10); doc.setLineWidth(0.4); doc.line(M,y,W-M,y); y+=7;
+
+  doc.setFontSize(15); doc.setFont(undefined,'bold'); doc.setTextColor(21,61,7);
+  doc.text("FICHE D'INTERVENTION", W/2, y, {align:'center'}); y+=9;
+  doc.setFont(undefined,'normal');
+
+  const colW=(CW-8)/2; const metX=M+colW+8;
+  doc.setFillColor(248,250,247); doc.roundedRect(M,y,colW,36,2,2,'F');
+  doc.setFontSize(7); doc.setTextColor(100,130,100); doc.setFont(undefined,'bold'); doc.text('CLIENT', M+4, y+5);
+  doc.setFont(undefined,'normal'); doc.setFontSize(10); doc.setTextColor(20,20,20);
+  doc.text(`${int.client.prenom||''} ${int.client.nom||''}`.toUpperCase(), M+4, y+11);
+  doc.setFontSize(8.5); doc.setTextColor(60,60,60);
+  [int.client.adresse, int.client.tel, int.client.email].filter(Boolean).forEach((l,i) => doc.text(l, M+4, y+17+i*5));
+
+  doc.setFillColor(248,250,247); doc.roundedRect(metX,y,colW,36,2,2,'F');
+  doc.setFontSize(7); doc.setTextColor(100,130,100); doc.setFont(undefined,'bold'); doc.text('INTERVENTION', metX+4, y+5);
+  doc.setFont(undefined,'normal'); doc.setFontSize(8.5); doc.setTextColor(60,60,60);
+  doc.text(`Réf : ${int.id}`, metX+4, y+11);
+  doc.text(`Date : ${fmtDate(int.date)}`, metX+4, y+17);
+  if (int.heure) doc.text(`Heure : ${int.heure}${int.duree?' ('+durLabel(int.duree)+')':''}`, metX+4, y+22);
+  if (int.superficie) doc.text(`Superficie : ${int.superficie}`, metX+4, y+27);
+  y+=44;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Prestation','Qté','Prix u.','Total']],
+    body: (int.lignes||[]).map(l=>[l.desc, l.qty%1===0?String(l.qty):l.qty.toLocaleString('fr-FR'), fmtPdf(l.pu), fmtPdf(l.qty*l.pu)]),
+    margin:{left:M,right:M},
+    headStyles:{fillColor:[21,61,7],textColor:255,fontStyle:'bold',fontSize:8},
+    bodyStyles:{fontSize:8.5,textColor:[40,40,40]},
+    alternateRowStyles:{fillColor:[249,252,248]},
+    columnStyles:{0:{cellWidth:'auto'},1:{cellWidth:14,halign:'center'},2:{cellWidth:26,halign:'right'},3:{cellWidth:26,halign:'right',fontStyle:'bold'}},
+  });
+  y = doc.lastAutoTable.finalY + 5;
+
+  const sub=(int.lignes||[]).reduce((s,l)=>s+l.qty*l.pu,0);
+  const tX=W-M-62, tW=62;
+  const tRow=(lbl,val,bold,bg,tc)=>{ if(bg) doc.setFillColor(...bg); else doc.setFillColor(255,255,255); doc.rect(tX,y,tW,6.5,bg?'FD':'S'); doc.setDrawColor(220,230,220); doc.setLineWidth(0.2); doc.rect(tX,y,tW,6.5); doc.setFontSize(8); doc.setFont(undefined,bold?'bold':'normal'); doc.setTextColor(...(tc||[40,40,40])); doc.text(lbl,tX+3,y+4.3); doc.text(val,tX+tW-3,y+4.3,{align:'right'}); doc.setFont(undefined,'normal'); y+=6.5; };
+  tRow('TOTAL', fmtPdf(sub), true, [21,61,7], [255,255,255]);
+  if (int.sap) {
+    tRow("Credit SAP 50 %", `- ${fmtPdf(sub/2)}`, false, [232,248,224], [30,92,10]);
+    tRow('Net avec SAP', fmtPdf(sub/2), true, [240,255,235], [21,61,7]);
+  }
+  y+=6;
+
+  if (int.notes) {
+    doc.setFontSize(8); doc.setTextColor(60,60,60); doc.setFont(undefined,'bold'); doc.text('Notes :', M, y); y+=4;
+    doc.setFont(undefined,'normal'); const nl=doc.splitTextToSize(int.notes, CW); doc.text(nl, M, y); y+=nl.length*4+5;
+  }
+  if (int.sap && s.sap) {
+    doc.setFontSize(7); doc.setTextColor(50,100,50); doc.setFont(undefined,'italic');
+    const sl=doc.splitTextToSize(`Prestataire agree SAP (${s.sap}). Credit d'impot 50 % (art. 199 sexdecies CGI).`, CW);
+    doc.text(sl, M, y); y+=sl.length*3.5+5; doc.setFont(undefined,'normal');
+  }
+  doc.setFontSize(7); doc.setTextColor(160,160,160);
+  doc.line(M,284,W-M,284);
+  doc.text([s.nom||'Allo Tonte', s.adresse||'Hermonville 51220', s.siret?`SIRET ${s.siret}`:''].filter(Boolean).join(' · '), W/2, 288, {align:'center'});
+  doc.save(`Fiche-${int.id}-${(int.client.nom||'client').replace(/\s+/g,'_')}.pdf`);
+  showToast('✓ Fiche PDF générée');
+}
+
+/* ════════════════════ ACOMPTE ════════════════════ */
+function updateRestedu() {
+  const f = factures.find(x => x.id === editingFacId); if (!f) return;
+  const acompte = parseFloat(document.getElementById('fac-acompte')?.value) || 0;
+  const reste   = (f.total || 0) - acompte;
+  const el = document.getElementById('fac-reste-du');
+  if (el) el.textContent = acompte > 0 ? fmt(reste) : '—';
+}
+
+/* ════════════════════ DOSSIER SAUVEGARDE (File System Access API) ════════════════════ */
+function _openPrefsDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('allo-tonte-prefs', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+async function _getSaveFolder() {
+  try {
+    const db = await _openPrefsDB();
+    return new Promise(resolve => {
+      const tx = db.transaction('handles', 'readonly');
+      const req = tx.objectStore('handles').get('saveFolder');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror   = () => resolve(null);
+    });
+  } catch { return null; }
+}
+async function _setSaveFolder(handle) {
+  try {
+    const db = await _openPrefsDB();
+    return new Promise(resolve => {
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put(handle, 'saveFolder');
+      tx.oncomplete = () => resolve(true);
+      tx.onerror    = () => resolve(false);
+    });
+  } catch { return false; }
+}
+
+let _autoSaveTimer = null;
+
+function _updateAutoSaveStatus(state, folderName, ts) {
+  const bar  = document.getElementById('autosave-bar');
+  const name = document.getElementById('save-folder-name');
+  const last = document.getElementById('last-save-time');
+  if (state === 'ok') {
+    if (bar)  { bar.style.display = 'flex'; bar.innerHTML = `<span style="color:#86efac">💾 Auto-save actif</span>&nbsp;<span style="color:rgba(255,255,255,.6);font-weight:400">· ${folderName} · ${ts}</span>`; }
+    if (name) { name.textContent = '📂 ' + folderName; name.style.color = 'var(--green)'; name.style.fontStyle = 'normal'; }
+    if (last) { last.textContent = 'Dernière sauvegarde auto : ' + ts; last.style.color = 'var(--green)'; }
+  } else if (state === 'prompt') {
+    if (bar)  { bar.style.display = 'flex'; bar.innerHTML = `<span style="color:#fde68a">⚠️ Auto-save en pause</span>&nbsp;·&nbsp;<a href="#" onclick="reactivateAutoSave();return false;" style="color:#fde68a;font-weight:700;text-decoration:underline;">Réactiver</a>`; }
+    if (name) { name.textContent = '⚠️ ' + (folderName || 'Permission expirée') + ' — cliquez Réactiver'; name.style.color = 'var(--orange)'; name.style.fontStyle = 'normal'; }
+    if (last) { last.textContent = 'Auto-save en pause après redémarrage'; last.style.color = 'var(--orange)'; }
+  } else {
+    if (bar) bar.style.display = 'none';
+  }
+}
+
+function _startAutoSave() {
+  if (_autoSaveTimer) clearInterval(_autoSaveTimer);
+  _autoSaveTimer = setInterval(() => _tryAutoSave(), 5 * 60 * 1000);
+}
+
+async function _tryAutoSave() {
+  const dir = await _getSaveFolder(); if (!dir) return;
+  try {
+    const perm = await dir.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { _updateAutoSaveStatus('prompt', '', ''); return; }
+    await _writeToFolder(dir, true);
+  } catch(e) { console.warn('Auto-save silencieux échoué :', e); }
+}
+
+async function _writeToFolder(dir, silent = false) {
+  const data = {
+    version: '2.0', date: today(),
+    interventions: JSON.parse(localStorage.getItem('at-interventions') || '[]'),
+    factures:      JSON.parse(localStorage.getItem('at-factures')      || '[]'),
+    devis:         JSON.parse(localStorage.getItem('at-devis')         || '[]'),
+    clients:       JSON.parse(localStorage.getItem('at-clients')       || '[]'),
+    materiel:      JSON.parse(localStorage.getItem('at-materiel')      || '[]'),
+    settings:      JSON.parse(localStorage.getItem('at-settings')      || '{}'),
+  };
+  const filename = _backupFilename();
+  const fh = await dir.getFileHandle(filename, { create: true });
+  const w  = await fh.createWritable();
+  await w.write(JSON.stringify(data, null, 2));
+  await w.close();
+  const ts = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  localStorage.setItem('at-last-autosave', ts);
+  _updateAutoSaveStatus('ok', dir.name, ts);
+  if (!silent) showToast('💾 Sauvegardé dans « ' + dir.name + ' » → ' + filename, 4000);
+  return filename;
+}
+
+async function _checkAndOfferRestore(dir) {
+  const keys = ['at-interventions', 'at-factures', 'at-devis', 'at-clients'];
+  const hasData = keys.some(k => { try { return JSON.parse(localStorage.getItem(k)||'[]').length > 0; } catch { return false; } });
+  if (hasData) return;
+  let latestName = '', latestHandle = null;
+  try {
+    for await (const [name, fh] of dir.entries()) {
+      if (name.startsWith('allo-tonte-backup') && name.endsWith('.json') && name > latestName) {
+        latestName = name; latestHandle = fh;
+      }
+    }
+  } catch { return; }
+  if (!latestHandle) return;
+  setTimeout(async () => {
+    if (!confirm(`⚠️ Vos données semblent vides (peut-être effacées après redémarrage).\n\nUne sauvegarde a été trouvée :\n📄 ${latestName}\n\nVoulez-vous la restaurer automatiquement ?`)) return;
+    try {
+      const file = await latestHandle.getFile();
+      const data = JSON.parse(await file.text());
+      if (Array.isArray(data.interventions)) localStorage.setItem('at-interventions', JSON.stringify(data.interventions));
+      if (Array.isArray(data.factures))      localStorage.setItem('at-factures',      JSON.stringify(data.factures));
+      if (Array.isArray(data.devis))         localStorage.setItem('at-devis',         JSON.stringify(data.devis));
+      if (Array.isArray(data.clients))       localStorage.setItem('at-clients',       JSON.stringify(data.clients));
+      if (Array.isArray(data.materiel))      localStorage.setItem('at-materiel',      JSON.stringify(data.materiel));
+      if (data.settings) localStorage.setItem('at-settings', JSON.stringify(data.settings));
+      showToast('✓ Données restaurées depuis la sauvegarde — rechargement…', 2500);
+      setTimeout(() => location.reload(), 2700);
+    } catch(e) { alert('Erreur lors de la restauration : ' + e.message); }
+  }, 800);
+}
+
+async function _initSaveSystem() {
+  const handle = await _getSaveFolder();
+  if (!handle) return;
+  try {
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      _startAutoSave();
+      const ts = localStorage.getItem('at-last-autosave') || '—';
+      _updateAutoSaveStatus('ok', handle.name, ts);
+    } else {
+      _updateAutoSaveStatus('prompt', handle.name, '');
+    }
+  } catch { _updateAutoSaveStatus('prompt', '?', ''); }
+}
+
+async function reactivateAutoSave() {
+  const dir = await _getSaveFolder();
+  if (!dir) { openSettings(); return; }
+  try {
+    const perm = await dir.requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      _startAutoSave();
+      await _writeToFolder(dir, false);
+      await _checkAndOfferRestore(dir);
+    } else {
+      showToast('Permission refusée — l\'auto-save ne peut pas démarrer.', 3000);
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Erreur : ' + e.message, 3000);
+  }
+}
+
+async function chooseSaveFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('Votre navigateur ne supporte pas cette fonctionnalité.\nUtilisez Google Chrome ou Microsoft Edge.');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'allo-tonte-backup', startIn: 'documents' });
+    await _setSaveFolder(handle);
+    _startAutoSave();
+    await _writeToFolder(handle, false);
+    await _checkAndOfferRestore(handle);
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Erreur : ' + e.message, 3000);
+  }
+}
+
+/* ════════════════════ SAUVEGARDE JSON ════════════════════ */
+function _backupFilename() {
+  const n = new Date();
+  const pad = v => String(v).padStart(2,'0');
+  return `allo-tonte-backup_${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}_${pad(n.getHours())}h${pad(n.getMinutes())}m${pad(n.getSeconds())}.json`;
+}
+async function exportBackup() {
+  const json = JSON.stringify({
+    version: '2.0', date: today(),
+    interventions: JSON.parse(localStorage.getItem('at-interventions') || '[]'),
+    factures:      JSON.parse(localStorage.getItem('at-factures')      || '[]'),
+    devis:         JSON.parse(localStorage.getItem('at-devis')         || '[]'),
+    clients:       JSON.parse(localStorage.getItem('at-clients')       || '[]'),
+    materiel:      JSON.parse(localStorage.getItem('at-materiel')      || '[]'),
+    settings:      JSON.parse(localStorage.getItem('at-settings')      || '{}'),
+  }, null, 2);
+  const filename = _backupFilename();
+  /* — Tentative écriture dans le dossier configuré — */
+  const dirHandle = await _getSaveFolder();
+  if (dirHandle) {
+    try {
+      const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        _startAutoSave();
+        const fh = await dirHandle.getFileHandle(filename, { create: true });
+        const w  = await fh.createWritable();
+        await w.write(json); await w.close();
+        const ts = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+        localStorage.setItem('at-last-autosave', ts);
+        _updateAutoSaveStatus('ok', dirHandle.name, ts);
+        showToast('💾 Sauvegardé dans « ' + dirHandle.name + ' » · auto-save activé pour cette session', 4000);
+        return;
+      }
+    } catch(e) { console.warn('Écriture dossier échouée, fallback :', e); }
+  }
+  /* — Fallback : téléchargement classique — */
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('✓ Sauvegarde téléchargée — configurez un dossier auto dans Paramètres', 3500);
+}
+function importBackup(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!confirm(`Restaurer la sauvegarde du ${data.date||'?'} ?\n\n⚠️ Cela écrasera toutes les données actuelles.`)) { input.value=''; return; }
+      if (Array.isArray(data.interventions)) localStorage.setItem('at-interventions', JSON.stringify(data.interventions));
+      if (Array.isArray(data.factures))      localStorage.setItem('at-factures',      JSON.stringify(data.factures));
+      if (Array.isArray(data.devis))         localStorage.setItem('at-devis',         JSON.stringify(data.devis));
+      if (Array.isArray(data.clients))       localStorage.setItem('at-clients',       JSON.stringify(data.clients));
+      if (Array.isArray(data.materiel))      localStorage.setItem('at-materiel',      JSON.stringify(data.materiel));
+      if (data.settings && typeof data.settings === 'object') localStorage.setItem('at-settings', JSON.stringify(data.settings));
+      showToast('✓ Restauré — rechargement…', 2000);
+      setTimeout(() => location.reload(), 2200);
+    } catch(err) { alert('Fichier invalide. Vérifiez qu\'il s\'agit bien d\'une sauvegarde Allo Tonte.'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ════════════════════ INIT ════════════════════ */
+renderCalendar();
+fetchWeather();
+_initSaveSystem();
+if (!settings.nom) setTimeout(() => showToast('👋 Renseignez vos infos dans ⚙ Paramètres.', 4500), 500);
+</script>
+</body>
+</html>

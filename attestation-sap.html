@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attestation fiscale SAP — Allo Tonte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-dark:#153d07; --green:#1e5c0a; --green-light:#4a9e25; --green-pale:#e8f5e0;
+      --blue:#2563eb; --blue-pale:#eff6ff;
+      --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb; --gray-300:#d1d5db;
+      --gray-400:#9ca3af; --gray-500:#6b7280; --gray-700:#374151; --gray-900:#111827;
+    }
+    body { font-family:'Inter',sans-serif; font-size:13px; background:var(--gray-100); min-height:100vh; padding-top:56px; }
+
+    /* ── Navbar ── */
+    .navbar { position:fixed;top:0;left:0;right:0;height:56px;background:var(--green-dark);display:flex;align-items:center;padding:0 20px;gap:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3); }
+    .navbar-logo { height:34px;width:auto;background:#d0d0d0;border-radius:6px;padding:3px 8px;margin-right:10px; }
+    .nav-links { display:flex;align-items:center;gap:2px;flex:1; }
+    .nav-link { color:rgba(255,255,255,.65);font-size:.78rem;font-weight:600;text-decoration:none;padding:6px 10px;border-radius:6px;transition:all .15s;white-space:nowrap; }
+    .nav-link:hover { color:#fff;background:rgba(255,255,255,.1); }
+    .nav-link.active { color:#fff;background:rgba(255,255,255,.18); }
+    .nav-sep { width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px; }
+
+    /* ── Toolbar ── */
+    #toolbar { max-width:820px;margin:24px auto 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:0 16px; }
+    #toolbar h1 { font-size:1rem;font-weight:700;color:var(--green);flex:1; }
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .15s; }
+    .btn:hover { opacity:.85; }
+    .btn-green { background:var(--green);color:#fff; }
+    .btn-blue  { background:var(--blue);color:#fff; }
+    .btn-gray  { background:var(--gray-200);color:var(--gray-700); }
+
+    /* ── Document ── */
+    #attestation { max-width:820px;margin:0 auto 40px;background:#fff;padding:40px 50px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.1); }
+
+    /* En-tête */
+    .doc-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:3px solid var(--green); }
+    .doc-meta { text-align:right;font-size:.78rem;color:var(--gray-500);line-height:1.9; }
+    .doc-meta strong { color:var(--gray-900); }
+
+    /* Titre officiel */
+    .doc-title { text-align:center;margin-bottom:28px;background:var(--blue-pale);border:2px solid var(--blue);border-radius:10px;padding:16px 20px; }
+    .doc-title h2 { font-size:1.1rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.04em; }
+    .doc-title p { font-size:.78rem;color:var(--gray-700);margin-top:5px;line-height:1.5; }
+
+    /* Parties */
+    .parties-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px; }
+    .partie-box { background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:10px;padding:14px 16px; }
+    .partie-box.prestataire { border-color:var(--green-light);background:var(--green-pale); }
+    .partie-lbl { font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);margin-bottom:8px; }
+    .partie-box.prestataire .partie-lbl { color:var(--green); }
+    .field-row { display:flex;align-items:baseline;gap:6px;margin-bottom:5px;font-size:.8rem; }
+    .field-row label { flex-shrink:0;color:var(--gray-500);min-width:68px;font-size:.73rem; }
+    .field-val { flex:1;border:none;border-bottom:1.5px solid var(--gray-300);background:transparent;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--gray-900);padding:1px 4px;outline:none;width:100%;transition:border-color .15s; }
+    .field-val:focus { border-bottom-color:var(--green); }
+    .field-val[readonly] { border-bottom-style:dashed;color:var(--gray-700);cursor:default; }
+    .inline-field { border:none;border-bottom:1.5px solid var(--gray-300);background:transparent;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--gray-900);padding:0 4px;outline:none;min-width:80px; }
+    .inline-field:focus { border-bottom-color:var(--green); }
+
+    /* Section */
+    .section { margin-bottom:22px; }
+    .section-title { font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--green);border-bottom:2px solid var(--green-pale);padding-bottom:5px;margin-bottom:12px; }
+    .section p { font-size:.82rem;line-height:1.7;color:var(--gray-700); }
+
+    /* Tableau détail mensuel */
+    .detail-table { width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px; }
+    .detail-table th { background:var(--green-pale);color:var(--green-dark);font-weight:700;padding:7px 10px;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em; }
+    .detail-table th:nth-child(2),.detail-table th:nth-child(3) { text-align:right; }
+    .detail-table td { padding:7px 10px;border-bottom:1px solid var(--gray-200);font-size:.8rem; }
+    .detail-table td:nth-child(2),.detail-table td:nth-child(3) { text-align:right;font-weight:600; }
+    .detail-table tfoot td { font-weight:800;color:var(--green-dark);border-top:2px solid var(--green-pale);background:var(--green-pale);padding:9px 10px; }
+    .detail-table tfoot td:nth-child(2),.detail-table tfoot td:nth-child(3) { text-align:right; }
+    .detail-table td input[type=number] { border:none;border-bottom:1px solid var(--gray-300);background:transparent;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--gray-900);text-align:right;width:80px;outline:none;padding:0 2px; }
+    .detail-table td input[type=number]:focus { border-bottom-color:var(--green); }
+
+    /* Récap fiscal */
+    .fiscal-recap { background:var(--blue-pale);border:2px solid var(--blue);border-radius:10px;padding:16px 20px;margin:14px 0; }
+    .fiscal-recap-grid { display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center; }
+    .fiscal-lbl { font-size:.8rem;color:var(--gray-700); }
+    .fiscal-val { font-size:.9rem;font-weight:800;color:var(--blue);text-align:right; }
+    .fiscal-val.big { font-size:1.2rem;color:var(--green-dark); }
+    .fiscal-sep { grid-column:1/-1;border-top:1px solid rgba(37,99,235,.2);margin:4px 0; }
+
+    /* Mentions légales */
+    .mentions { background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:10px;padding:12px 16px;font-size:.74rem;color:var(--gray-500);line-height:1.7; }
+    .mentions strong { color:var(--gray-700); }
+
+    /* Signature */
+    .sig-box { border:1.5px solid var(--gray-200);border-radius:10px;padding:14px 18px;max-width:340px; }
+    .sig-lbl { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:5px; }
+    .sig-name { font-size:.82rem;font-weight:700;color:var(--gray-900);margin-bottom:3px; }
+    .sig-date-row { font-size:.75rem;color:var(--gray-500);margin-bottom:36px; }
+    .sig-date-row input { border:none;border-bottom:1.5px solid var(--gray-300);background:transparent;font-family:inherit;font-size:.75rem;font-weight:600;color:var(--gray-900);padding:0 4px;outline:none;width:110px; }
+    .sig-line { border-top:1.5px solid var(--gray-300); }
+    .sig-mention { font-size:.63rem;color:var(--gray-400);margin-top:3px;font-style:italic; }
+
+    /* Footer */
+    .doc-footer { margin-top:20px;padding-top:12px;border-top:1.5px solid var(--gray-200);font-size:.65rem;color:var(--gray-400);text-align:center;line-height:1.7; }
+
+    /* Sélecteur client */
+    .client-select-bar { display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap; }
+    .client-select-bar select { flex:1;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.82rem;outline:none;background:#fff; }
+    .client-select-bar select:focus { border-color:var(--green); }
+
+    @media print {
+      body { background:#fff;padding-top:0; }
+      .navbar,#toolbar,.client-select-bar { display:none !important; }
+      #attestation { box-shadow:none;border-radius:0;max-width:100%;padding:20px 26px;margin:0; }
+      .field-val,.inline-field,.detail-table td input { border-bottom-color:transparent !important; }
+      .fiscal-recap { break-inside:avoid; page-break-inside:avoid; }
+      .section { break-inside:avoid; page-break-inside:avoid; }
+      .mentions { break-inside:avoid; page-break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="clients.html"            class="nav-link">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link active">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link">🔧 Matériel</a>
+  </div>
+</nav>
+
+<div id="toolbar">
+  <h1>🏛 Attestation fiscale SAP</h1>
+  <button class="btn btn-gray" onclick="resetForm()">🔄 Vider</button>
+  <button class="btn btn-green" onclick="window.print()">🖨 Imprimer / PDF</button>
+</div>
+
+<div id="attestation">
+
+  <!-- En-tête -->
+  <div class="doc-header">
+    <img src="allotonte-removebg-preview.png" alt="Allo Tonte" style="height:56px;width:auto;">
+    <div class="doc-meta">
+      <div>Attestation n° <strong><input class="inline-field" id="num-att" placeholder="SAP-2026-001" style="min-width:110px;"></strong></div>
+      <div>Année fiscale : <strong><input class="inline-field" id="annee-att" style="min-width:60px;"></strong></div>
+      <div>Établie le : <strong><input class="inline-field" id="date-att" style="min-width:100px;"></strong></div>
+      <div id="header-sap-num"></div>
+    </div>
+  </div>
+
+  <!-- Titre officiel -->
+  <div class="doc-title">
+    <h2>Attestation fiscale annuelle — Services à la Personne</h2>
+    <p>
+      Document établi conformément à l'article L.7233-3 du Code du travail et à l'article 199 sexdecies du Code général des impôts.<br>
+      À conserver et à joindre à votre déclaration de revenus pour bénéficier de la réduction / crédit d'impôt.
+    </p>
+  </div>
+
+  <!-- Sélecteur client depuis localStorage -->
+  <div class="client-select-bar">
+    <select id="client-select" onchange="loadClient()">
+      <option value="">— Sélectionner un client depuis la liste —</option>
+    </select>
+    <span style="font-size:.75rem;color:var(--gray-500);">ou remplir manuellement ci-dessous</span>
+  </div>
+
+  <!-- Parties -->
+  <div class="parties-grid">
+    <div class="partie-box prestataire">
+      <div class="partie-lbl">L'organisme prestataire</div>
+      <div class="field-row"><label>Raison sociale :</label><input class="field-val" id="p-nom" readonly></div>
+      <div class="field-row"><label>Adresse :</label><input class="field-val" id="p-adresse" readonly></div>
+      <div class="field-row"><label>Tél. :</label><input class="field-val" id="p-tel" readonly></div>
+      <div class="field-row"><label>SIRET :</label><input class="field-val" id="p-siret" readonly></div>
+      <div class="field-row"><label>N° agrément SAP :</label><input class="field-val" id="p-sap" readonly></div>
+    </div>
+    <div class="partie-box">
+      <div class="partie-lbl">Le bénéficiaire</div>
+      <div class="field-row"><label>Nom :</label><input class="field-val" id="c-nom" placeholder="Prénom NOM"></div>
+      <div class="field-row"><label>Adresse :</label><input class="field-val" id="c-adresse" placeholder="N° rue, ville, CP"></div>
+      <div class="field-row"><label>N° fiscal :</label><input class="field-val" id="c-fiscal" placeholder="Optionnel"></div>
+    </div>
+  </div>
+
+  <!-- Détail des interventions par mois -->
+  <div class="section">
+    <div class="section-title">Détail des sommes versées — Année <span id="annee-label">—</span></div>
+    <p style="margin-bottom:10px;font-size:.78rem;color:var(--gray-500);">Renseignez les montants réellement encaissés mois par mois, ou directement le total annuel ci-dessous.</p>
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>Mois</th>
+          <th>Nb interventions</th>
+          <th>Montant (€)</th>
+        </tr>
+      </thead>
+      <tbody id="mois-tbody"></tbody>
+      <tfoot>
+        <tr>
+          <td><strong>TOTAL ANNUEL</strong></td>
+          <td id="total-interv" style="text-align:right;">0</td>
+          <td id="total-montant" style="text-align:right;color:var(--green-dark);">0,00 €</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Récap fiscal -->
+  <div class="fiscal-recap">
+    <div style="font-size:.8rem;font-weight:700;color:var(--blue);margin-bottom:10px;">Récapitulatif fiscal</div>
+    <div class="fiscal-recap-grid">
+      <div class="fiscal-lbl">Total des sommes versées (TTC)</div>
+      <div class="fiscal-val big" id="recap-total">0,00 €</div>
+      <div class="fiscal-sep"></div>
+      <div class="fiscal-lbl">Base de calcul pour la réduction d'impôt (= total versé)</div>
+      <div class="fiscal-val" id="recap-base">0,00 €</div>
+      <div class="fiscal-lbl">Taux de réduction / crédit d'impôt applicable</div>
+      <div class="fiscal-val">50 %</div>
+      <div class="fiscal-sep"></div>
+      <div class="fiscal-lbl" style="font-weight:700;">Économie d'impôt estimée (50 % du total)</div>
+      <div class="fiscal-val big" id="recap-eco">0,00 €</div>
+    </div>
+    <p style="font-size:.7rem;color:var(--gray-500);margin-top:10px;">
+      ⚠️ Estimation indicative. Le montant réel dépend de votre situation fiscale et des plafonds en vigueur (12 000 € de base max pour un foyer standard, majorée selon situation).
+      Reportez le total versé dans votre déclaration en ligne sur <strong>impots.gouv.fr</strong>.
+    </p>
+  </div>
+
+  <!-- Nature des prestations -->
+  <div class="section">
+    <div class="section-title">Nature des prestations réalisées</div>
+    <p>
+      Les prestations réalisées entrent dans la catégorie <strong>« Entretien de la maison et travaux ménagers »</strong>
+      (jardinage inclus) au sens de l'article D.7231-1 du Code du travail, code NAF <strong>8129B</strong>.
+    </p>
+  </div>
+
+  <!-- Mentions légales -->
+  <div class="mentions">
+    <strong>Article 199 sexdecies CGI :</strong> Les dépenses afférentes aux services à la personne ouvrent droit à un crédit d'impôt
+    de 50 % des dépenses effectivement supportées dans la limite des plafonds légaux en vigueur.
+    Le prestataire certifie l'exactitude des informations mentionnées dans la présente attestation.
+    <strong>Toute fausse déclaration est passible des sanctions prévues par l'article 1770 terdecies du CGI.</strong>
+  </div>
+
+  <!-- Signature -->
+  <div style="margin-top:20px;">
+    <div class="section-title">Certification du prestataire</div>
+    <p style="font-size:.8rem;color:var(--gray-700);margin-bottom:14px;">
+      Je soussigné(e) <strong id="sig-nom">—</strong>, certifie l'exactitude des informations ci-dessus.
+    </p>
+    <div class="sig-box">
+      <div class="sig-lbl">Le prestataire</div>
+      <div class="sig-name" id="sig-nom2">—</div>
+      <div class="sig-date-row">À <input placeholder="Hermonville">, le <input id="sig-date"></div>
+      <div class="sig-line"></div>
+      <div class="sig-mention">Signature + cachet (si applicable)</div>
+    </div>
+  </div>
+
+  <div class="doc-footer" id="doc-footer"></div>
+</div>
+
+<script>
+const settings  = JSON.parse(localStorage.getItem('at-settings')      || '{}');
+const clients   = JSON.parse(localStorage.getItem('at-clients')        || '[]');
+const interv    = JSON.parse(localStorage.getItem('at-interventions')  || '[]');
+const factures  = JSON.parse(localStorage.getItem('at-factures')       || '[]');
+
+const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+function init() {
+  const nom   = settings.nom     || 'Allo Tonte';
+  const adr   = settings.adresse || 'Hermonville 51220';
+  const tel   = settings.tel     || '07 56 95 15 66';
+  const siret = settings.siret   || '';
+  const sap   = settings.sap     || '';
+
+  document.getElementById('p-nom').value    = nom;
+  document.getElementById('p-adresse').value = adr;
+  document.getElementById('p-tel').value    = tel;
+  document.getElementById('p-siret').value  = siret;
+  document.getElementById('p-sap').value    = sap;
+  document.getElementById('sig-nom').textContent  = nom;
+  document.getElementById('sig-nom2').textContent = nom;
+  if (sap) document.getElementById('header-sap-num').innerHTML = `N° agrément SAP : <strong>${sap}</strong>`;
+
+  const t  = new Date();
+  const yy = t.getFullYear();
+  const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  const annee = yy - 1; // attestation pour l'année précédente
+  document.getElementById('annee-att').value  = annee;
+  document.getElementById('date-att').value   = fmt(t);
+  document.getElementById('annee-label').textContent = annee;
+  document.getElementById('sig-date').value   = fmt(t);
+
+  const n = (parseInt(localStorage.getItem('at-att-counter')||'0') + 1);
+  document.getElementById('num-att').value = `SAP-${annee}-${String(n).padStart(3,'0')}`;
+
+  document.getElementById('doc-footer').textContent =
+    `${nom} — ${adr}${tel?' — '+tel:''}${siret?' — SIRET : '+siret:''}${sap?' — Agrément SAP : '+sap:''}`;
+
+  // Remplir sélecteur clients
+  const sel = document.getElementById('client-select');
+  clients.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id || c.nom;
+    opt.textContent = `${c.nom}${c.ville?' — '+c.ville:''}`;
+    sel.appendChild(opt);
+  });
+
+  // Tableau 12 mois
+  buildMoisTable(annee);
+}
+
+function buildMoisTable(annee, clientId = null) {
+  const tbody = document.getElementById('mois-tbody');
+  tbody.innerHTML = '';
+  MOIS.forEach((mois, idx) => {
+    // Chercher interventions + factures pour ce mois
+    let nbInt = 0; let montant = 0;
+    if (clientId) {
+      // Interventions de ce client ce mois
+      interv.filter(i => i.clientId == clientId || i.client == clientId).forEach(i => {
+        const d = new Date(i.date || i.dateDebut || '');
+        if (d.getFullYear() == annee && d.getMonth() == idx) nbInt++;
+      });
+      // Factures de ce client ce mois
+      factures.filter(f => (f.clientId == clientId || f.client == clientId) && f.statut === 'payée').forEach(f => {
+        const d = new Date(f.date || '');
+        if (d.getFullYear() == annee && d.getMonth() == idx) montant += parseFloat(f.total || 0);
+      });
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${mois} ${annee}</td>
+      <td><input type="number" min="0" value="${nbInt||''}" placeholder="0" oninput="updateTotals()" style="width:60px;"></td>
+      <td><input type="number" min="0" step="0.01" value="${montant||''}" placeholder="0,00" oninput="updateTotals()"></td>`;
+    tbody.appendChild(tr);
+  });
+  updateTotals();
+}
+
+function loadClient() {
+  const sel = document.getElementById('client-select');
+  const cid = sel.value;
+  const c   = clients.find(x => (x.id||x.nom) == cid);
+  if (!c) return;
+  document.getElementById('c-nom').value     = c.nom     || '';
+  document.getElementById('c-adresse').value = [c.adresse, c.ville, c.cp].filter(Boolean).join(', ');
+  const annee = parseInt(document.getElementById('annee-att').value) || new Date().getFullYear() - 1;
+  buildMoisTable(annee, cid);
+}
+
+function updateTotals() {
+  let totInt = 0; let totMnt = 0;
+  document.querySelectorAll('#mois-tbody tr').forEach(tr => {
+    const inps = tr.querySelectorAll('input[type=number]');
+    totInt += parseInt(inps[0].value)||0;
+    totMnt += parseFloat(inps[1].value)||0;
+  });
+  const fmt = n => n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+  document.getElementById('total-interv').textContent  = totInt;
+  document.getElementById('total-montant').textContent = fmt(totMnt);
+  document.getElementById('recap-total').textContent   = fmt(totMnt);
+  document.getElementById('recap-base').textContent    = fmt(totMnt);
+  document.getElementById('recap-eco').textContent     = fmt(totMnt / 2);
+}
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'annee-att') {
+    const y = parseInt(e.target.value);
+    if (y > 2000) { document.getElementById('annee-label').textContent = y; buildMoisTable(y); }
+  }
+});
+
+function resetForm() { if (confirm('Vider le formulaire ?')) location.reload(); }
+
+init();
+</script>
+</body>
+</html>
