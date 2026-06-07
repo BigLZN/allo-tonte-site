@@ -142,48 +142,48 @@ img { display: block; max-width: 100%; }
 /* ─── Navbar — LIGHT ─────────────────────────────────────── */
 #navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-  background: rgba(255,255,255,.96);
+  background: rgba(10,32,3,.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--green-pale);
-  transition: box-shadow .3s;
+  border-bottom: 1px solid rgba(92,212,46,.12);
+  transition: background .3s, box-shadow .3s;
 }
-#navbar.scrolled { box-shadow: 0 2px 24px rgba(20,72,10,.1); }
+#navbar.scrolled { background: rgba(8,24,2,.97); box-shadow: 0 2px 24px rgba(0,0,0,.3); }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 66px; }
 .nav-logo-img {
   height: 44px; width: auto; display: block;
-  background: var(--green-super-pale);
+  background: rgba(255,255,255,.08);
   border-radius: 8px; padding: 4px 10px;
-  border: 1px solid var(--green-pale);
+  border: 1px solid rgba(255,255,255,.12);
   transition: background .2s;
 }
-.nav-logo-img:hover { background: var(--green-pale); }
+.nav-logo-img:hover { background: rgba(255,255,255,.16); }
 .nav-links { display: flex; list-style: none; gap: 2.2rem; align-items: center; }
 .nav-links a {
-  color: #3a4a36; font-size: .88rem; font-weight: 500;
+  color: rgba(255,255,255,.78); font-size: .88rem; font-weight: 500;
   transition: color .2s; position: relative; padding-bottom: 3px;
 }
 .nav-links a::after {
   content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-  height: 2px; background: var(--green-mid);
+  height: 2px; background: var(--green-vivid);
   transform: scaleX(0); transition: transform .25s;
 }
-.nav-links a:hover { color: var(--green-dark); }
+.nav-links a:hover { color: var(--white); }
 .nav-links a:hover::after,
 .nav-links a.active::after { transform: scaleX(1); }
-.nav-links a.active { color: var(--green-dark); font-weight: 700; }
+.nav-links a.active { color: var(--white); font-weight: 700; }
 .nav-cta {
   background: var(--grad-gold) !important;
   color: var(--white) !important;
   padding: 9px 22px; border-radius: 99px;
   font-weight: 700 !important; font-size: .85rem !important;
-  box-shadow: 0 3px 16px rgba(212,150,12,.3);
+  box-shadow: 0 3px 16px rgba(212,150,12,.45);
   transition: box-shadow .25s !important;
 }
-.nav-cta:hover { box-shadow: 0 5px 28px rgba(212,150,12,.55) !important; }
+.nav-cta:hover { box-shadow: 0 5px 28px rgba(212,150,12,.7) !important; }
 .nav-cta::after { display: none !important; }
 .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
-.nav-burger span { display: block; width: 24px; height: 2px; background: var(--green-dark); border-radius: 2px; transition: all .3s; }
+.nav-burger span { display: block; width: 24px; height: 2px; background: rgba(255,255,255,.8); border-radius: 2px; transition: all .3s; }
 
 /* ─── Hero ───────────────────────────────────────────────── */
 #hero {
@@ -254,7 +254,10 @@ img { display: block; max-width: 100%; }
 /* ─── 3 Étapes — LIGHT ───────────────────────────────────── */
 #comment {
   padding: 90px 0;
-  background: var(--white);
+  background-color: var(--white);
+  background-image: linear-gradient(to bottom, #091803 0%, rgba(9,24,3,0) 90px);
+  background-repeat: no-repeat;
+  background-size: 100% 90px;
   position: relative; overflow: hidden;
 }
 #comment::before {
@@ -616,8 +619,8 @@ footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; hei
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .nav-burger { display: flex; }
-  .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 66px; left: 0; right: 0; background: rgba(255,255,255,.98); padding: 20px; gap: 1.2rem; border-bottom: 2px solid var(--green-pale); backdrop-filter: blur(20px); }
-  .nav-links.open a { font-size: 1rem; color: var(--green-dark); }
+  .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 66px; left: 0; right: 0; background: rgba(8,24,2,.97); padding: 20px; gap: 1.2rem; border-bottom: 2px solid rgba(92,212,46,.15); backdrop-filter: blur(20px); }
+  .nav-links.open a { font-size: 1rem; color: rgba(255,255,255,.88); }
   .sap-box { grid-template-columns: 1fr; }
   .sap-guide-intro { grid-template-columns: 1fr; }
   .cesu-box { grid-template-columns: 1fr; }
