@@ -254,10 +254,7 @@ img { display: block; max-width: 100%; }
 /* ─── 3 Étapes — LIGHT ───────────────────────────────────── */
 #comment {
   padding: 90px 0;
-  background-color: var(--white);
-  background-image: linear-gradient(to bottom, #091803 0%, rgba(9,24,3,0) 90px);
-  background-repeat: no-repeat;
-  background-size: 100% 90px;
+  background: var(--white);
   position: relative; overflow: hidden;
 }
 #comment::before {
