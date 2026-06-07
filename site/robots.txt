@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://allo-tonte-site.onrender.com/sitemap.xml
