@@ -48,7 +48,7 @@
   --gray:         #888;
   --text:         #1c2418;
   --grad-green:   linear-gradient(135deg, #14480a 0%, #1a6b0c 100%);
-  --grad-gold:    linear-gradient(135deg, #d4960c 0%, #f0b520 100%);
+  --grad-gold:    radial-gradient(ellipse at center, #f5bc22 0%, #d4960c 100%);
   --radius:       14px;
   --shadow:       0 4px 24px rgba(20,72,10,.10);
   --shadow-lg:    0 12px 48px rgba(20,72,10,.14);
