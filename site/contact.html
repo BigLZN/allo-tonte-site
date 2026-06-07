@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src https://api.web3forms.com; img-src 'self' data: https:; form-action https://api.web3forms.com 'self'; frame-ancestors 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <title>Devis gratuit — Contact — Allo Tonte Reims</title>
+  <meta name="description" content="Demandez votre devis gratuit sous 48h. Allo Tonte, jardinier à Reims et agglomération. Tél : 07 56 95 15 66." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ══════════ NAV ══════════ -->
+<nav id="navbar">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="nav-logo-img" />
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="services-tarifs.html">Services &amp; Tarifs</a></li>
+      <li><a href="abonnement.html">Abonnement &amp; SAP</a></li>
+      <li><a href="contact.html" class="nav-cta">Devis gratuit</a></li>
+    </ul>
+    <button class="nav-burger" id="navBurger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════ PAGE HERO ══════════ -->
+<div class="page-hero">
+  <div class="container">
+    <p class="page-hero-eyebrow">Allo Tonte — Reims &amp; Agglomération</p>
+    <h1>Devis gratuit sous 48h</h1>
+    <p>Remplissez le formulaire ou appelez directement. Je vous réponds rapidement, sans engagement.</p>
+  </div>
+</div>
+
+<!-- ══════════ CONTACT ══════════ -->
+<section id="contact" class="reveal">
+  <div class="container">
+    <h2 class="section-title">Prêt pour un jardin impeccable ?</h2>
+    <p class="section-sub">Réponse sous 48h, sans engagement.</p>
+
+    <div class="contact-wrap">
+      <div class="contact-info">
+        <h3>Nous contacter directement</h3>
+        <div class="contact-item">
+          <div class="contact-item-icon">📞</div>
+          <div class="contact-item-text">
+            <strong>Téléphone</strong>
+            <a href="tel:0756951566">07 56 95 15 66</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">📧</div>
+          <div class="contact-item-text">
+            <strong>E-mail</strong>
+            <a href="mailto:allotonte@gmail.com">allotonte@gmail.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">📍</div>
+          <div class="contact-item-text">
+            <strong>Basé à</strong>
+            Hermonville (51220) — Rayon 25 km
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">🕐</div>
+          <div class="contact-item-text">
+            <strong>Disponibilité</strong>
+            Du lundi au samedi — Réponse sous 48h
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">💳</div>
+          <div class="contact-item-text">
+            <strong>Agréé SAP</strong>
+            Crédit d'impôt 50% — CESU+ accepté<br>
+            <a href="abonnement.html" style="font-size:.82rem;text-decoration:underline;opacity:.8;">En savoir plus →</a>
+          </div>
+        </div>
+
+        <!-- Rappel zones -->
+        <div style="margin-top:2rem;padding:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;">
+          <p style="color:rgba(255,255,255,.6);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Zones desservies</p>
+          <p style="font-size:.85rem;color:rgba(255,255,255,.75);line-height:1.7;">
+            <span style="color:#9de86a;font-weight:700;">● Zone 1</span> Hermonville, Cauroy, Villers-Franqueux… <em style="color:rgba(255,255,255,.45)">Inclus</em><br>
+            <span style="color:var(--gold-light);font-weight:700;">● Zone 2</span> Tinqueux, St-Brice, Gueux, Courcy… <em style="color:rgba(255,255,255,.45)">+5 €/pass.</em><br>
+            <span style="color:#e080a0;font-weight:700;">● Zone 3</span> Reims, Bezannes, Cormontreuil… <em style="color:rgba(255,255,255,.45)">+9 €/pass.</em>
+          </p>
+        </div>
+      </div>
+
+      <div class="contact-form">
+        <h3>Demande de devis gratuit</h3>
+        <form id="devisForm" novalidate>
+          <input type="hidden" name="access_key" value="55dd53eb-fb4f-43a4-abcb-f1844a2c5bc0">
+          <input type="hidden" name="subject" value="🌿 Nouvelle demande de devis — Allo Tonte">
+          <input type="hidden" name="from_name" value="Site Allo Tonte">
+          <input type="checkbox" name="botcheck" style="display:none;" tabindex="-1" autocomplete="off">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prenom">Prénom</label>
+              <input type="text" id="prenom" name="prenom" placeholder="Jean" required maxlength="60" autocomplete="given-name" />
+            </div>
+            <div class="form-group">
+              <label for="nom">Nom</label>
+              <input type="text" id="nom" name="nom" placeholder="Dupont" required maxlength="60" autocomplete="family-name" />
+            </div>
+            <div class="form-group">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" name="email" placeholder="jean.dupont@email.fr" required maxlength="100" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label for="telephone">Téléphone</label>
+              <input type="tel" id="telephone" name="telephone" placeholder="06 XX XX XX XX" maxlength="20" pattern="[0-9 +\-()]{7,20}" autocomplete="tel" />
+            </div>
+            <div class="form-group">
+              <label for="ville">Ville</label>
+              <input type="text" id="ville" name="ville" placeholder="Reims" required maxlength="80" autocomplete="address-level2" />
+            </div>
+            <div class="form-group">
+              <label for="adresse">Adresse (optionnel)</label>
+              <input type="text" id="adresse" name="adresse" placeholder="12 rue des Lilas" maxlength="120" autocomplete="street-address" />
+            </div>
+            <div class="form-group">
+              <label for="superficie">Superficie estimée</label>
+              <select id="superficie" name="superficie">
+                <option value="">— Sélectionner —</option>
+                <option>≤ 100 m²</option>
+                <option>100–200 m²</option>
+                <option>200–350 m²</option>
+                <option>350–500 m²</option>
+                <option>500–750 m²</option>
+                <option>750–1 000 m²</option>
+                <option>1 000–1 500 m²</option>
+                <option>1 500–2 000 m²</option>
+                <option>Je ne sais pas</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Services souhaités</label>
+              <div class="service-pills">
+                <input type="checkbox" id="svc1" name="services[]" value="Tonte pelouse" /><label for="svc1">🌿 Tonte pelouse</label>
+                <input type="checkbox" id="svc2" name="services[]" value="Souffleur" /><label for="svc2">💨 Souffleur</label>
+                <input type="checkbox" id="svc3" name="services[]" value="Débroussaillage" /><label for="svc3">🌾 Débroussaillage</label>
+                <input type="checkbox" id="svc4" name="services[]" value="Karcher" /><label for="svc4">💧 Karcher</label>
+                <input type="checkbox" id="svc5" name="services[]" value="Taille de haies" /><label for="svc5">✂️ Taille de haies</label>
+                <input type="checkbox" id="svc6" name="services[]" value="Abonnement annuel" /><label for="svc6">📅 Abonnement annuel</label>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label for="message">Message (optionnel)</label>
+              <textarea id="message" name="message" placeholder="Précisions sur votre jardin, contraintes particulières…" maxlength="1000"></textarea>
+            </div>
+          </div>
+          <div class="form-submit">
+            <button type="submit" class="btn btn-primary">Envoyer ma demande de devis →</button>
+          </div>
+          <p class="form-legal">Vos données ne sont utilisées que pour répondre à votre demande. Aucun démarchage.</p>
+        </form>
+        <div class="form-msg success" id="formSuccess">✅ Votre demande a bien été envoyée ! Réponse sous 48h.</div>
+        <div class="form-msg error" id="formError">⚠️ Veuillez renseigner au moins votre prénom, email et ville.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-logo">ALLO <span>TONTE</span></div>
+        <div class="footer-tagline">Entretien de jardins &amp; espaces verts — Reims &amp; Agglomération</div>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Accueil</a>
+        <a href="services-tarifs.html">Services &amp; Tarifs</a>
+        <a href="abonnement.html">Abonnement &amp; SAP</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+    <p class="footer-copy">© 2026 Allo Tonte — Auto-entrepreneur — Hermonville (51220) — allotonte@gmail.com</p>
+  </div>
+</footer>
+
+<div id="mobile-bar">
+  <a href="tel:0756951566" class="mb-call">📞 Appeler</a>
+  <a href="contact.html" class="mb-devis">📋 Devis gratuit</a>
+</div>
+<button id="totop" aria-label="Retour en haut">↑</button>
+
+<script src="main.js"></script>
+</body>
+</html>
+
