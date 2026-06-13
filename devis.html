@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -1240,13 +1240,18 @@ async function generatePDF(id) {
   const d = devisList.find(x => x.id === id); if (!d) return;
   showToast('⏳ Génération du PDF…', 4000);
 
-  const { jsPDF }  = window.jspdf;
-  const doc        = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W          = 210;
-  const M          = 18;
-  const CW         = W - M * 2;
-  let y            = M;
-  const s          = settings;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, M = 18, CW = W - M * 2;
+  const s = settings;
+  let y = M;
+
+  const GD = [21,61,7]; const GM = [30,92,10]; const GL = [74,158,37];
+  const GP = [232,245,224]; const GR = [229,231,235]; const GS = [249,250,251];
+  const TD = [26,26,26]; const TG = [107,114,128];
+
+  const colW = (CW - 8) / 2;
+  const rX   = M + colW + 8;
 
   /* Logo */
   try {
@@ -1254,153 +1259,175 @@ async function generatePDF(id) {
     if (b64) doc.addImage(b64, 'PNG', M, y, 42, 17);
   } catch(e) {}
 
-  /* Company info — right column */
-  doc.setFontSize(8.5); doc.setTextColor(80,80,80);
-  const cLines = [
-    s.nom || 'Allo Tonte',
-    s.adresse || 'Hermonville 51220',
-    s.tel   || '',
-    s.email || '',
-    s.siret ? `SIRET : ${s.siret}` : '',
-    s.sap   ? `Agrément SAP : ${s.sap}` : '',
-  ].filter(Boolean);
-  cLines.forEach((l, i) => {
-    doc.setFont(undefined, i === 0 ? 'bold' : 'normal');
-    doc.text(l, W - M, y + 4 + i * 4.5, { align: 'right' });
-  });
-  doc.setFont(undefined, 'normal');
+  /* Méta devis (droite) */
+  [['Devis n°', d.id], ['Date', fmtDate(d.date)], ['Valable jusqu\'au', fmtDate(d.validite)]]
+    .forEach(([lbl, val], i) => {
+      const ry = y + 3 + i * 5.5;
+      doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+      doc.text(lbl + ' :', W - M - 32, ry);
+      doc.setFont(undefined,'bold'); doc.setTextColor(...TD);
+      doc.text(val, W - M, ry, { align:'right' });
+    });
   y += 24;
 
-  /* Divider */
-  doc.setDrawColor(30, 92, 10); doc.setLineWidth(0.5);
-  doc.line(M, y, W - M, y); y += 7;
+  /* Ligne verte */
+  doc.setDrawColor(...GD); doc.setLineWidth(0.8);
+  doc.line(M, y, W - M, y); y += 9;
 
-  /* Client + Devis blocks */
-  const colW = (CW - 8) / 2;
-  const metX = M + colW + 8;
+  /* Titre */
+  doc.setFont(undefined,'bold'); doc.setFontSize(13.5); doc.setTextColor(...GD);
+  doc.text('DEVIS \u2014 ENTRETIEN DE JARDIN', W/2, y, { align:'center' });
+  y += 5.5;
+  doc.setFont(undefined,'normal'); doc.setFontSize(8); doc.setTextColor(...TG);
+  doc.text('Etabli par voie numerique', W/2, y, { align:'center' });
+  y += 11;
 
-  doc.setFillColor(248, 250, 247);
-  doc.roundedRect(M, y, colW, 40, 2, 2, 'F');
-  doc.setFontSize(7); doc.setTextColor(100,130,100); doc.setFont(undefined,'bold');
-  doc.text('CLIENT', M + 4, y + 5);
-  doc.setFont(undefined,'normal');
-  doc.setFontSize(10); doc.setTextColor(20,20,20);
-  doc.text(`${d.client.prenom} ${d.client.nom}`.toUpperCase(), M + 4, y + 11);
-  doc.setFontSize(8.5); doc.setTextColor(60,60,60);
-  [d.client.adresse, `${d.client.cp} ${d.client.ville}`.trim(), d.client.email, d.client.tel]
-    .filter(Boolean).forEach((l, i) => doc.text(l, M + 4, y + 17 + i * 5));
+  /* Boxes prestataire / client */
+  const boxH = 40;
 
-  doc.setFillColor(248, 250, 247);
-  doc.roundedRect(metX, y, colW, 40, 2, 2, 'F');
-  doc.setFontSize(7); doc.setTextColor(100,130,100); doc.setFont(undefined,'bold');
-  doc.text('DEVIS', metX + 4, y + 5);
-  doc.setFont(undefined,'normal');
-  doc.setFontSize(11); doc.setTextColor(20,20,20);
-  doc.text(d.id, metX + 4, y + 11);
-  doc.setFontSize(8.5); doc.setTextColor(60,60,60);
-  doc.text(`Date : ${fmtDate(d.date)}`,             metX + 4, y + 18);
-  doc.text(`Valide jusqu'au : ${fmtDate(d.validite)}`, metX + 4, y + 23);
-  if (d.superficie) doc.text(`Superficie : ${d.superficie}`, metX + 4, y + 28);
+  doc.setFillColor(...GP); doc.setDrawColor(...GL); doc.setLineWidth(0.4);
+  doc.roundedRect(M, y, colW, boxH, 2.5, 2.5, 'FD');
+  doc.setFontSize(6.5); doc.setFont(undefined,'bold'); doc.setTextColor(...GM);
+  doc.text('LE PRESTATAIRE', M+4, y+5.5);
+  [['Nom', s.nom||'Allo Tonte'],['Adresse',s.adresse||'Hermonville 51220'],['Tel.',s.tel||'07 56 95 15 66'],['SIRET',s.siret||'']]
+    .forEach(([lbl,val],i) => {
+      if (!val && lbl==='SIRET') return;
+      doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+      doc.text(lbl+' :', M+4, y+12+i*6.2);
+      doc.setFont(undefined,'bold'); doc.setTextColor(...TD);
+      doc.text(val, M+21, y+12+i*6.2);
+    });
 
-  const sc = { brouillon:[150,150,150], envoyé:[37,99,235], accepté:[30,92,10], refusé:[192,57,43] }[d.status] || [100,100,100];
-  doc.setFillColor(...sc);
-  doc.roundedRect(metX + 4, y + 32, 32, 5.5, 1, 1, 'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont(undefined,'bold');
-  doc.text((STATUS_LABELS[d.status]||d.status).toUpperCase(), metX + 4 + 16, y + 36, { align:'center' });
-  doc.setFont(undefined,'normal');
-  y += 48;
+  doc.setFillColor(...GS); doc.setDrawColor(...GR); doc.setLineWidth(0.4);
+  doc.roundedRect(rX, y, colW, boxH, 2.5, 2.5, 'FD');
+  doc.setFontSize(6.5); doc.setFont(undefined,'bold'); doc.setTextColor(...TG);
+  doc.text('LE CLIENT (PROSPECT)', rX+4, y+5.5);
+  const clientNom = (d.client.prenom||'') + ' ' + (d.client.nom||'');
+  const clientAdr = [d.client.adresse, d.client.cp, d.client.ville].filter(Boolean).join(' ');
+  [['Nom',clientNom.trim()],['Adresse',clientAdr],['Tel.',d.client.tel||''],['Superficie',d.superficie||'']]
+    .forEach(([lbl,val],i) => {
+      if (!val) return;
+      doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+      doc.text(lbl+' :', rX+4, y+12+i*6.2);
+      doc.setFont(undefined,'bold'); doc.setTextColor(...TD);
+      doc.text(val, rX+21, y+12+i*6.2);
+    });
+  y += boxH + 9;
 
-  /* Services table */
+  /* Titre section */
+  doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...GM);
+  doc.text('DETAIL DES PRESTATIONS', M, y);
+  doc.setDrawColor(...GP); doc.setLineWidth(2);
+  doc.line(M, y+2, W-M, y+2); y += 8;
+
+  /* Tableau */
   doc.autoTable({
     startY: y,
-    head: [['Description', 'Qté', 'Prix unitaire', 'Total']],
-    body: d.lignes.map(l => [
-      l.desc,
-      l.qty % 1 === 0 ? String(l.qty) : l.qty.toLocaleString('fr-FR'),
-      fmtPdf(l.pu),
-      fmtPdf(l.qty * l.pu),
-    ]),
-    margin: { left: M, right: M },
-    headStyles: { fillColor: [21,61,7], textColor: 255, fontStyle: 'bold', fontSize: 8.5 },
-    bodyStyles: { fontSize: 8.5, textColor: [40,40,40] },
-    alternateRowStyles: { fillColor: [249,252,248] },
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { cellWidth: 16, halign: 'center' },
-      2: { cellWidth: 28, halign: 'right' },
-      3: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
-    },
-    tableLineColor: [220,230,220], tableLineWidth: 0.2,
+    head: [['Prestation', 'Qte', 'P.U. (EUR)', 'Total (EUR)']],
+    body: d.lignes.map(l => [l.desc, l.qty%1===0?String(l.qty):l.qty.toLocaleString('fr-FR'), fmtPdf(l.pu), fmtPdf(l.qty*l.pu)]),
+    margin: { left:M, right:M },
+    headStyles: { fillColor:GP, textColor:GD, fontStyle:'bold', fontSize:7.5, lineColor:GL, lineWidth:0.3 },
+    bodyStyles: { fontSize:8.5, textColor:TD, lineColor:GR, lineWidth:0.2 },
+    alternateRowStyles: { fillColor:[255,255,255] },
+    columnStyles: { 0:{cellWidth:'auto'}, 1:{cellWidth:14,halign:'center'}, 2:{cellWidth:26,halign:'right'}, 3:{cellWidth:26,halign:'right',fontStyle:'bold'} },
+    tableLineColor:GR, tableLineWidth:0.2,
   });
-  y = doc.lastAutoTable.finalY + 6;
+  y = doc.lastAutoTable.finalY + 5;
 
-  /* Totals */
-  const sub     = d.lignes.reduce((s, l) => s + l.qty * l.pu, 0);
-  const remAmt  = sub * (d.remise || 0) / 100;
-  const total   = sub - remAmt;
-  const tX      = W - M - 72;
-  const tW      = 72;
-
-  const tRow = (lbl, val, bold, bg, tc) => {
-    if (bg) doc.setFillColor(...bg); else doc.setFillColor(255,255,255);
-    doc.rect(tX, y, tW, 7, bg ? 'FD' : 'S');
-    doc.setDrawColor(220,230,220); doc.setLineWidth(0.2); doc.rect(tX, y, tW, 7);
-    doc.setFontSize(8.5);
-    doc.setFont(undefined, bold ? 'bold' : 'normal');
-    doc.setTextColor(...(tc||[40,40,40]));
-    doc.text(lbl, tX + 3, y + 4.8);
-    doc.text(val, tX + tW - 3, y + 4.8, { align:'right' });
-    doc.setFont(undefined,'normal');
-    y += 7;
-  };
+  const sub = d.lignes.reduce((acc,l) => acc+l.qty*l.pu, 0);
+  const remAmt = sub*(d.remise||0)/100;
+  const total = sub - remAmt;
 
   if (d.remise > 0) {
-    tRow('Sous-total', fmtPdf(sub));
-    tRow(`Remise ${d.remise} %`, `- ${fmtPdf(remAmt)}`, false, null, [192,57,43]);
+    const stX = W-M-74;
+    doc.setFillColor(255,255,255); doc.setDrawColor(...GR); doc.setLineWidth(0.2);
+    doc.rect(stX,y,74,7);
+    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.setTextColor(...TD);
+    doc.text('Sous-total', stX+3, y+4.8);
+    doc.text(fmtPdf(sub), W-M-3, y+4.8, {align:'right'}); y+=7;
+    doc.setFillColor(255,255,255); doc.rect(stX,y,74,7);
+    doc.setTextColor(192,57,43);
+    doc.text('Remise '+d.remise+' %', stX+3, y+4.8);
+    doc.text('- '+fmtPdf(remAmt), W-M-3, y+4.8, {align:'right'}); y+=7;
   }
-  tRow('TOTAL', fmtPdf(total), true, [21,61,7], [255,255,255]);
+
+  /* Récap total TTC */
+  const recapW=95, recapX=W-M-recapW, recapH=d.sap?20:14;
+  doc.setFillColor(...GP); doc.setDrawColor(...GL); doc.setLineWidth(0.5);
+  doc.roundedRect(recapX, y, recapW, recapH, 2, 2, 'FD');
+  doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.setTextColor(...GM);
+  doc.text('Total devis TTC', recapX+5, y+6);
+  doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.setTextColor(...GD);
+  doc.text(fmtPdf(total), W-M-4, y+7.5, {align:'right'});
   if (d.sap) {
-    tRow("Crédit d'impôt SAP 50 %", `- ${fmtPdf(total/2)}`, false, [232,248,224], [30,92,10]);
-    tRow('Net à payer avec SAP', fmtPdf(total/2), true, [240,255,235], [21,61,7]);
+    doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(...GL);
+    doc.text('Apres credit d\'impot SAP (-50 %) : '+fmtPdf(total/2)+' reels', recapX+5, y+15);
   }
-  y += 8;
+  y += recapH + 8;
+
+  /* Conditions */
+  const condTxt = 'Conditions : Ce devis est valable 30 jours a compter de sa date d\'emission. Les prestations sont realisees dans le cadre du service a la personne (SAP) - agrement n° '+(s.sap||'-')+'. Le client beneficie d\'une reduction fiscale de 50 % sur les sommes versees (dans la limite des plafonds legaux). Paiement par cheque, virement ou especes a reception de la facture. Tout devis accepte vaut bon de commande.';
+  const condLines = doc.splitTextToSize(condTxt, CW-8);
+  const condH = condLines.length*4.2+8;
+  doc.setFillColor(...GS); doc.setDrawColor(...GR); doc.setLineWidth(0.3);
+  doc.roundedRect(M, y, CW, condH, 2, 2, 'FD');
+  doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+  condLines.forEach((l,i) => doc.text(l, M+4, y+5.5+i*4.2));
+  y += condH + 8;
 
   /* Notes */
   if (d.notes) {
-    doc.setFontSize(8); doc.setTextColor(80,80,80);
-    doc.setFont(undefined,'bold'); doc.text('Notes :', M, y); y += 4;
+    doc.setFontSize(7.5); doc.setFont(undefined,'bold'); doc.setTextColor(...TG);
+    doc.text('Notes :', M, y); y += 4;
     doc.setFont(undefined,'normal');
     const nl = doc.splitTextToSize(d.notes, CW);
-    doc.text(nl, M, y); y += nl.length * 4.5 + 6;
+    doc.text(nl, M, y); y += nl.length*4.5+6;
   }
 
-  /* SAP legal mention */
-  if (d.sap && s.sap) {
-    doc.setFontSize(7.5); doc.setTextColor(50,100,50); doc.setFont(undefined,'italic');
-    const sapTxt = `Prestataire agréé Services à la Personne (${s.sap}). Les prestations d'entretien de jardin à domicile ouvrent droit à un crédit d'impôt de 50 % (art. 199 sexdecies du CGI), dans la limite de 5 000 € de dépenses annuelles.`;
-    const sl = doc.splitTextToSize(sapTxt, CW);
-    doc.text(sl, M, y); y += sl.length * 4 + 6;
-    doc.setFont(undefined,'normal');
-  }
+  /* Bon pour accord */
+  doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...GM);
+  doc.text('BON POUR ACCORD', M, y);
+  doc.setDrawColor(...GP); doc.setLineWidth(2);
+  doc.line(M, y+2, W-M, y+2); y += 8;
 
-  /* Signature */
-  const sigY = Math.max(y + 4, 240);
-  doc.setDrawColor(180,180,180); doc.setLineWidth(0.3);
-  doc.line(M, sigY + 14, M + 74, sigY + 14);
-  doc.setFontSize(7.5); doc.setTextColor(120,120,120);
-  doc.text('Signature client — « Lu et approuvé, bon pour accord »', M, sigY + 19);
+  const sigH = 32;
+  doc.setFillColor(255,255,255); doc.setDrawColor(...GR); doc.setLineWidth(0.3);
+  doc.roundedRect(M, y, colW, sigH, 2, 2, 'D');
+  doc.setFontSize(6.5); doc.setFont(undefined,'bold'); doc.setTextColor(...TG);
+  doc.text('LE PRESTATAIRE', M+4, y+5);
+  doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(...TD);
+  doc.text(s.nom||'Allo Tonte', M+4, y+11);
+  const sigVille = (s.adresse||'Hermonville').split(' ')[0];
+  doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+  doc.text('A '+sigVille+' , le '+fmtDate(d.date), M+4, y+17);
+  doc.setDrawColor(...GR); doc.setLineWidth(0.4);
+  doc.line(M+4, y+27, M+colW-4, y+27);
+  doc.setFontSize(6.5); doc.setTextColor(190,190,190); doc.setFont(undefined,'italic');
+  doc.text('Signature', M+4, y+31);
+
+  doc.setFillColor(255,255,255); doc.setDrawColor(...GR); doc.setLineWidth(0.3);
+  doc.roundedRect(rX, y, colW, sigH, 2, 2, 'D');
+  doc.setFontSize(6.5); doc.setFont(undefined,'bold'); doc.setTextColor(...TG);
+  doc.text('LE CLIENT - "BON POUR ACCORD"', rX+4, y+5);
+  doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(...TD);
+  doc.text(clientNom.trim()||'—', rX+4, y+11);
+  doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+  doc.text('A _______________ , le _______________', rX+4, y+17);
+  doc.setDrawColor(...GR); doc.setLineWidth(0.4);
+  doc.line(rX+4, y+27, rX+colW-4, y+27);
+  doc.setFontSize(6.5); doc.setTextColor(190,190,190); doc.setFont(undefined,'italic');
+  doc.text('Signature precedee de la mention manuscrite', rX+4, y+31);
 
   /* Footer */
-  doc.setFontSize(7); doc.setTextColor(160,160,160);
-  doc.line(M, 284, W - M, 284);
-  doc.text(
-    [s.nom||'Allo Tonte', s.adresse||'Hermonville 51220', s.siret ? `SIRET ${s.siret}` : '', s.iban ? `IBAN : ${s.iban}` : ''].filter(Boolean).join('  ·  '),
-    W/2, 288, { align:'center' }
-  );
+  doc.setDrawColor(...GR); doc.setLineWidth(0.3);
+  doc.line(M, 282, W-M, 282);
+  doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(160,160,160);
+  const fp = [s.nom||'Allo Tonte', s.adresse||'Hermonville 51220', s.tel||'', s.siret?'SIRET '+s.siret:''].filter(Boolean);
+  doc.text(fp.join('  \u00b7  '), W/2, 287, { align:'center' });
 
-  const fname = `Devis-${d.id}-${(d.client.nom||'client').replace(/\s+/g,'_')}.pdf`;
+  const fname = 'Devis-'+d.id+'-'+(d.client.nom||'client').replace(/\s+/g,'_')+'.pdf';
   doc.save(fname);
-  showToast(`✓ PDF généré : ${fname}`);
+  showToast('\u2713 PDF genere : '+fname);
 }
 
 async function imgToBase64(src) {
