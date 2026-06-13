@@ -174,11 +174,6 @@ if (devisForm) {
       error.textContent   = '⚠️ Adresse e-mail invalide. Vérifiez le format (ex : jean@email.fr).';
       return;
     }
-    if (Date.now() - _pageLoadTs < 4000) {
-      success.style.display = 'block';
-      success.textContent   = '✅ Votre demande a bien été envoyée ! Je vous réponds sous 48h.';
-      this.reset(); return;
-    }
     if (!_checkRateLimit()) {
       error.style.display = 'block';
       error.textContent   = '⚠️ Trop de tentatives. Attendez une heure ou écrivez directement à allotonte@gmail.com';

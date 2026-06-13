@@ -608,6 +608,9 @@ footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; hei
 .footer-links a { font-size: .82rem; color: rgba(255,255,255,.38); transition: color .2s; }
 .footer-links a:hover { color: rgba(255,255,255,.82); }
 .footer-copy { width: 100%; padding-top: 20px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,.07); font-size: .76rem; color: rgba(255,255,255,.24); text-align: center; }
+.footer-social { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.social-link { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; color: rgba(255,255,255,.45); border: 1px solid rgba(255,255,255,.14); border-radius: 99px; padding: 5px 14px; transition: color .2s, border-color .2s, background .2s; }
+.social-link:hover { color: rgba(255,255,255,.9); border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.06); }
 
 /* ─── Floating buttons ───────────────────────────────────── */
 #mobile-bar { display: flex; flex-direction: column; position: fixed; bottom: 28px; left: 24px; z-index: 1100; gap: 9px; }
