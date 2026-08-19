@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Panneau saisons — Allo Tonte</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: var(--off-white); min-height: 100vh; }
+    .admin-wrap { max-width: 560px; margin: 0 auto; padding: 60px 24px 80px; }
+    .admin-logo { text-align: center; font-weight: 900; font-size: 1.4rem; color: var(--green-deep); margin-bottom: 2rem; }
+    .admin-logo span { color: var(--green-light); }
+    .admin-card { background: var(--white); border: 1.5px solid var(--green-pale); border-radius: var(--radius); padding: 32px 30px; box-shadow: var(--shadow-lg); }
+    .admin-card h1 { font-size: 1.25rem; color: var(--green-deep); margin-bottom: .4rem; }
+    .admin-card .sub { color: #6b7a65; font-size: .85rem; margin-bottom: 1.6rem; }
+    .admin-field { margin-bottom: 16px; }
+    .admin-field label { display: block; font-size: .8rem; font-weight: 700; color: var(--green-dark); margin-bottom: 6px; }
+    .admin-field input, .admin-field select {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--gray-light);
+      font-family: inherit; font-size: .95rem; color: var(--text); background: var(--off-white);
+    }
+    .admin-field input:focus, .admin-field select:focus { outline: none; border-color: var(--green-light); }
+    .admin-check { display: flex; align-items: center; gap: 10px; font-size: .88rem; color: var(--text); margin-bottom: 20px; }
+    .admin-check input { width: auto; }
+    .admin-msg { font-size: .85rem; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; display: none; }
+    .admin-msg.error { background: #fde8e8; color: #a3282f; display: block; }
+    .admin-msg.ok { background: var(--green-pale); color: var(--green-dark); display: block; }
+    .admin-info { background: var(--gold-pale); border: 1px solid rgba(212,150,12,.25); color: #7a5a10; font-size: .8rem; padding: 14px 16px; border-radius: 10px; margin-bottom: 20px; line-height: 1.6; }
+    .admin-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .admin-actions .btn { padding: 11px 20px; font-size: .88rem; }
+    .btn-ghost { background: var(--off-white); color: var(--text); border: 1.5px solid var(--gray-light); }
+    .btn-ghost:hover { background: var(--green-pale); }
+    .admin-section-title { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--green-mid); margin: 26px 0 12px; }
+    .admin-current { font-size: .9rem; color: var(--text); margin-bottom: 10px; }
+    .admin-current strong { color: var(--green-dark); }
+    .admin-hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="admin-wrap">
+  <div class="admin-logo">ALLO <span>TONTE</span> · Panneau saisons</div>
+
+  <!-- ═══ Écran : création du mot de passe (1ère utilisation) ═══ -->
+  <div class="admin-card admin-hidden" id="screenSetup">
+    <h1>Créer un mot de passe administrateur</h1>
+    <p class="sub">Ce panneau n'a pas encore été configuré sur ce navigateur. Choisissez un mot de passe (8 caractères minimum).</p>
+    <div class="admin-msg" id="setupMsg"></div>
+    <form id="setupForm">
+      <div class="admin-field">
+        <label for="setupPass">Nouveau mot de passe</label>
+        <input type="password" id="setupPass" autocomplete="new-password" minlength="8" required />
+      </div>
+      <div class="admin-field">
+        <label for="setupPass2">Confirmer le mot de passe</label>
+        <input type="password" id="setupPass2" autocomplete="new-password" minlength="8" required />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Créer et se connecter</button>
+    </form>
+  </div>
+
+  <!-- ═══ Écran : connexion ═══ -->
+  <div class="admin-card admin-hidden" id="screenLogin">
+    <h1>Connexion</h1>
+    <p class="sub">Accès réservé à l'administrateur du site.</p>
+    <div class="admin-msg" id="loginMsg"></div>
+    <form id="loginForm">
+      <div class="admin-field">
+        <label for="loginPass">Mot de passe</label>
+        <input type="password" id="loginPass" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Se connecter</button>
+    </form>
+  </div>
+
+  <!-- ═══ Écran : panneau (après connexion) ═══ -->
+  <div class="admin-card admin-hidden" id="screenPanel">
+    <h1>Réglages saisonniers</h1>
+    <p class="sub">Bandeau de services et effets visuels (neige, feuilles, pétales…) affichés sur le site.</p>
+
+    <div class="admin-info">
+      ⚠️ Le site public est en <strong>saison automatique</strong> (selon le calendrier) pour tous les visiteurs. Les réglages ci-dessous ne changent l'affichage que <strong>dans ce navigateur</strong>, pratique pour prévisualiser une saison ou une offre avant qu'elle n'arrive. Un badge « 🧪 Date de test » s'affiche sur le site tant qu'une date simulée est active, pour ne pas confondre avec le vrai site.
+    </div>
+
+    <div class="admin-msg" id="panelMsg"></div>
+
+    <p class="admin-current">Saison automatique actuelle : <strong id="autoSeasonLabel">—</strong></p>
+
+    <div class="admin-field">
+      <label for="seasonSelect">Saison affichée</label>
+      <select id="seasonSelect">
+        <option value="auto">Automatique (calendrier)</option>
+        <option value="printemps">🌱 Printemps</option>
+        <option value="ete">☀️ Été</option>
+        <option value="automne">🍂 Automne</option>
+        <option value="hiver">❄️ Hiver</option>
+      </select>
+    </div>
+
+    <label class="admin-check">
+      <input type="checkbox" id="fxCheckbox" />
+      Activer les effets visuels (neige / feuilles / pétales)
+    </label>
+
+    <div class="admin-section-title">Voir une autre date</div>
+    <p class="admin-current" id="testDateInfo">Aucune date de test active — le site utilise la date du jour.</p>
+    <div class="admin-field">
+      <label for="testDateInput">Date à simuler</label>
+      <input type="date" id="testDateInput" />
+    </div>
+    <div class="admin-actions">
+      <button type="button" class="btn btn-green" id="btnSetTestDate">Activer cette date</button>
+      <button type="button" class="btn btn-ghost" id="btnClearTestDate">Revenir à la date du jour</button>
+    </div>
+
+    <div class="admin-section-title">Saison &amp; effets</div>
+    <div class="admin-actions">
+      <button type="button" class="btn btn-green" id="btnSave">Enregistrer</button>
+      <button type="button" class="btn btn-ghost" id="btnReset">Réinitialiser</button>
+      <a href="index.html" target="_blank" rel="noopener" class="btn btn-outline" style="background:var(--green-pale);color:var(--green-dark);">Voir le site →</a>
+    </div>
+
+    <div class="admin-section-title">Compte</div>
+    <div class="admin-actions">
+      <button type="button" class="btn btn-ghost" id="btnChangePass">Changer le mot de passe</button>
+      <button type="button" class="btn btn-ghost" id="btnLogout">Se déconnecter</button>
+    </div>
+  </div>
+
+  <!-- ═══ Écran : changement de mot de passe ═══ -->
+  <div class="admin-card admin-hidden" id="screenChangePass">
+    <h1>Changer le mot de passe</h1>
+    <div class="admin-msg" id="changeMsg"></div>
+    <form id="changeForm">
+      <div class="admin-field">
+        <label for="curPass">Mot de passe actuel</label>
+        <input type="password" id="curPass" autocomplete="current-password" required />
+      </div>
+      <div class="admin-field">
+        <label for="newPass">Nouveau mot de passe</label>
+        <input type="password" id="newPass" autocomplete="new-password" minlength="8" required />
+      </div>
+      <div class="admin-field">
+        <label for="newPass2">Confirmer le nouveau mot de passe</label>
+        <input type="password" id="newPass2" autocomplete="new-password" minlength="8" required />
+      </div>
+      <div class="admin-actions">
+        <button type="submit" class="btn btn-green">Valider</button>
+        <button type="button" class="btn btn-ghost" id="btnCancelChange">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  const HASH_KEY   = 'at_admin_hash';
+  const FAILS_KEY  = 'at_admin_fails';
+  const SESSION_KEY = 'at_admin_ok';
+  const MAX_FAILS  = 5;
+  const LOCK_MS    = 5 * 60 * 1000;
+
+  const $ = (id) => document.getElementById(id);
+  const screens = ['screenSetup', 'screenLogin', 'screenPanel', 'screenChangePass'];
+  function showScreen(id) {
+    screens.forEach(s => $(s).classList.toggle('admin-hidden', s !== id));
+  }
+
+  async function sha256(text) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function getFails() {
+    try { return JSON.parse(localStorage.getItem(FAILS_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function isLocked() {
+    const now = Date.now();
+    const fails = getFails().filter(t => now - t < LOCK_MS);
+    return fails.length >= MAX_FAILS ? fails[0] + LOCK_MS - now : 0;
+  }
+  function registerFail() {
+    const now = Date.now();
+    const fails = getFails().filter(t => now - t < LOCK_MS);
+    fails.push(now);
+    localStorage.setItem(FAILS_KEY, JSON.stringify(fails));
+  }
+  function clearFails() { localStorage.removeItem(FAILS_KEY); }
+
+  function msg(id, text, type) {
+    const el = $(id);
+    el.textContent = text;
+    el.className = 'admin-msg ' + (type || 'error');
+  }
+
+  /* ── Écran de démarrage ── */
+  function boot() {
+    const hash = localStorage.getItem(HASH_KEY);
+    if (!hash) { showScreen('screenSetup'); return; }
+    if (sessionStorage.getItem(SESSION_KEY) === '1') { openPanel(); return; }
+    showScreen('screenLogin');
+  }
+
+  /* ── Création du mot de passe ── */
+  $('setupForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const p1 = $('setupPass').value, p2 = $('setupPass2').value;
+    if (p1.length < 8) { msg('setupMsg', 'Le mot de passe doit contenir au moins 8 caractères.'); return; }
+    if (p1 !== p2) { msg('setupMsg', 'Les mots de passe ne correspondent pas.'); return; }
+    const hash = await sha256(p1);
+    localStorage.setItem(HASH_KEY, hash);
+    sessionStorage.setItem(SESSION_KEY, '1');
+    openPanel();
+  });
+
+  /* ── Connexion ── */
+  $('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const wait = isLocked();
+    if (wait > 0) {
+      msg('loginMsg', '⚠️ Trop de tentatives. Réessayez dans ' + Math.ceil(wait / 60000) + ' min.');
+      return;
+    }
+    const value = $('loginPass').value;
+    const hash = await sha256(value);
+    if (hash === localStorage.getItem(HASH_KEY)) {
+      clearFails();
+      sessionStorage.setItem(SESSION_KEY, '1');
+      $('loginPass').value = '';
+      openPanel();
+    } else {
+      registerFail();
+      msg('loginMsg', '⚠️ Mot de passe incorrect.');
+    }
+  });
+
+  /* ── Panneau ── */
+  const TEST_DATE_KEY = 'at-season-test-date';
+
+  function effectiveDate() {
+    const testDate = localStorage.getItem(TEST_DATE_KEY);
+    if (testDate) {
+      const parsed = new Date(testDate + 'T12:00:00');
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return new Date();
+  }
+
+  function refreshDateInfo() {
+    const now = effectiveDate();
+    const monthSeason = ['hiver','hiver','printemps','printemps','printemps','ete','ete','ete','automne','automne','automne','hiver'];
+    const labels = { printemps: '🌱 Printemps', ete: '☀️ Été', automne: '🍂 Automne', hiver: '❄️ Hiver' };
+    $('autoSeasonLabel').textContent = labels[monthSeason[now.getMonth()]];
+
+    const testDate = localStorage.getItem(TEST_DATE_KEY);
+    $('testDateInput').value = testDate || '';
+    $('testDateInfo').textContent = testDate
+      ? '🧪 Date de test active : ' + now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+      : 'Aucune date de test active — le site utilise la date du jour.';
+  }
+
+  function openPanel() {
+    refreshDateInfo();
+    $('seasonSelect').value = localStorage.getItem('at-season-override') || 'auto';
+    $('fxCheckbox').checked = localStorage.getItem('at-season-fx') !== 'off';
+
+    showScreen('screenPanel');
+  }
+
+  $('btnSetTestDate').addEventListener('click', function () {
+    const value = $('testDateInput').value;
+    if (!value) { msg('panelMsg', '⚠️ Choisissez une date avant d\'activer.'); return; }
+    localStorage.setItem(TEST_DATE_KEY, value);
+    refreshDateInfo();
+    msg('panelMsg', '✅ Date de test activée pour ce navigateur.', 'ok');
+  });
+
+  $('btnClearTestDate').addEventListener('click', function () {
+    localStorage.removeItem(TEST_DATE_KEY);
+    refreshDateInfo();
+    msg('panelMsg', '✅ Retour à la date du jour.', 'ok');
+  });
+
+  $('btnSave').addEventListener('click', function () {
+    localStorage.setItem('at-season-override', $('seasonSelect').value);
+    localStorage.setItem('at-season-fx', $('fxCheckbox').checked ? 'on' : 'off');
+    msg('panelMsg', '✅ Réglages enregistrés pour ce navigateur.', 'ok');
+  });
+
+  $('btnReset').addEventListener('click', function () {
+    localStorage.removeItem('at-season-override');
+    localStorage.setItem('at-season-fx', 'on');
+    $('seasonSelect').value = 'auto';
+    $('fxCheckbox').checked = true;
+    msg('panelMsg', '✅ Réglages réinitialisés (saison automatique, effets activés).', 'ok');
+  });
+
+  $('btnLogout').addEventListener('click', function () {
+    sessionStorage.removeItem(SESSION_KEY);
+    boot();
+  });
+
+  /* ── Changement de mot de passe ── */
+  $('btnChangePass').addEventListener('click', function () {
+    $('changeForm').reset();
+    $('changeMsg').className = 'admin-msg';
+    showScreen('screenChangePass');
+  });
+  $('btnCancelChange').addEventListener('click', openPanel);
+
+  $('changeForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const cur = await sha256($('curPass').value);
+    if (cur !== localStorage.getItem(HASH_KEY)) { msg('changeMsg', '⚠️ Mot de passe actuel incorrect.'); return; }
+    const n1 = $('newPass').value, n2 = $('newPass2').value;
+    if (n1.length < 8) { msg('changeMsg', 'Le nouveau mot de passe doit contenir au moins 8 caractères.'); return; }
+    if (n1 !== n2) { msg('changeMsg', 'Les nouveaux mots de passe ne correspondent pas.'); return; }
+    localStorage.setItem(HASH_KEY, await sha256(n1));
+    msg('panelMsg', '✅ Mot de passe modifié.', 'ok');
+    openPanel();
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>

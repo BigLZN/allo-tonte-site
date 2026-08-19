@@ -556,6 +556,7 @@
     <a href="planning.html"           class="nav-link">📅 Planning</a>
     <div class="nav-sep"></div>
     <a href="devis.html"              class="nav-link active">📋 Devis</a>
+    <a href="facture.html"            class="nav-link">🧾 Factures</a>
     <a href="clients.html"            class="nav-link">👥 Clients</a>
     <div class="nav-sep"></div>
     <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
@@ -777,6 +778,7 @@
       <button class="btn btn-secondary btn-sm" id="btn-duplicate" onclick="duplicateCurrentDevis()" style="display:none;">⧉ Dupliquer</button>
       <div class="spacer"></div>
       <button class="btn btn-secondary" onclick="saveDevisForm()">💾 Sauvegarder</button>
+      <button class="btn btn-primary" onclick="convertToFacture(currentId)">🧾 Créer facture</button>
       <button class="btn btn-secondary" onclick="generatePDF(currentId)">📄 Générer PDF</button>
       <button class="btn btn-primary" onclick="sendEmailDevis(currentId)">📧 Envoyer par email</button>
     </div>
@@ -849,8 +851,11 @@ const CATALOGUE = [
   { label: 'Tonte pelouse 1 500–2 000 m²',                         prix: 135 },
   { label: 'Souffleur / ramassage de feuilles',                    prix: 35  },
   { label: 'Débroussaillage',                                      prix: 45  },
-  { label: 'Karcher terrasse / allée',                             prix: 52  },
   { label: 'Taille de haies',                                      prix: 38  },
+  { label: 'Scarification (à partir de 0,85 €/m², à ajuster)',       prix: 85  },
+  { label: 'Création de potager - motoculteur (sur devis)',         prix: 80  },
+  { label: 'Pose de gravier (sur devis)',                          prix: 60  },
+  { label: 'Aménagement de jardin (sur devis)',                     prix: 150 },
   { label: 'Abonnement annuel (8 passages) ≤ 100 m²',              prix: 170 },
   { label: 'Abonnement annuel (8 passages) 100–200 m²',            prix: 231 },
   { label: 'Abonnement annuel (8 passages) 200–350 m²',            prix: 306 },
@@ -868,7 +873,6 @@ const MODELES = [
   { label: 'Tonte + haies',    lignes: [{ desc: 'Tonte pelouse 200–350 m²', qty: 1, pu: 45 }, { desc: 'Taille de haies', qty: 1, pu: 38 }] },
   { label: 'Grand jardin',     lignes: [{ desc: 'Tonte pelouse 500–750 m²', qty: 1, pu: 68 }, { desc: 'Débroussaillage', qty: 1, pu: 45 }] },
   { label: 'Remise en état',   lignes: [{ desc: 'Tonte pelouse 350–500 m²', qty: 1, pu: 55 }, { desc: 'Débroussaillage', qty: 1, pu: 45 }, { desc: 'Taille de haies', qty: 1, pu: 38 }, { desc: 'Souffleur / ramassage de feuilles', qty: 1, pu: 35 }] },
-  { label: 'Nettoyage terrasse', lignes: [{ desc: 'Karcher terrasse / allée', qty: 1, pu: 52 }] },
   { label: 'Abonnement saison', lignes: [{ desc: 'Abonnement annuel (8 passages) 100–200 m²', qty: 1, pu: 231 }] },
 ];
 
@@ -915,6 +919,42 @@ function showToast(msg, ms = 2500) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// Générer un N° de facture (FAC-YYYY-XXX)
+function nextFactId() {
+  const fl = JSON.parse(localStorage.getItem('at-factures') || '[]');
+  const y = new Date().getFullYear();
+  const nums = fl.map(f => { const p = (f.id||'').split('-'); return parseInt(p[2]) || 0; });
+  const max = nums.length ? Math.max(...nums) : 0;
+  return `FAC-${y}-${String(max + 1).padStart(3, '0')}`;
+}
+
+// Convertir un devis en facture (ne modifie pas le devis)
+function convertToFacture(devId) {
+  if (!devId) { showToast('Aucun devis sélectionné'); return; }
+  const d = devisList.find(x => x.id === devId);
+  if (!d) { showToast('Devis introuvable'); return; }
+
+  const factures = JSON.parse(localStorage.getItem('at-factures') || '[]');
+  const fid = nextFactId();
+  const f = {
+    id: fid,
+    date: today(),
+    echeance: addDays(today(), 30),
+    status: 'brouillon',
+    client: JSON.parse(JSON.stringify(d.client || {})),
+    lignes: JSON.parse(JSON.stringify(d.lignes || [])),
+    remise: d.remise || 0,
+    sap: d.sap !== false,
+    notes: (d.notes ? d.notes + '\n' : '') + `Facture créée depuis le devis ${d.id}`,
+    total: d.total || (d.lignes ? d.lignes.reduce((s,l)=>s + (l.qty||0)*(l.pu||0),0) : 0)
+  };
+  factures.push(f);
+  localStorage.setItem('at-factures', JSON.stringify(factures));
+  showToast('✓ Facture créée : ' + fid);
+  // ouvrir la page facture en édition du nouvel id
+  window.location.href = 'facture.html?id=' + encodeURIComponent(fid);
 }
 
 /* ════════════════════════ LIST VIEW ════════════════════════ */
@@ -1013,6 +1053,7 @@ function renderList() {
         <td onclick="event.stopPropagation()">
           <div class="tbl-actions">
             ${needsRelance ? `<button class="action-btn" style="color:#d45d00;border-color:#ffa040;" onclick="relancerDevis('${d.id}')">🔔 Relancer</button>` : ''}
+            <button class="action-btn" onclick="convertToFacture('${d.id}')">🧾 Facturer</button>
             <button class="action-btn pdf"   onclick="generatePDF('${d.id}')">📄 PDF</button>
             <button class="action-btn email" onclick="sendEmailDevis('${d.id}')">📧</button>
             <button class="action-btn danger" onclick="confirmDelete('${d.id}')">🗑</button>
@@ -1366,7 +1407,7 @@ async function generatePDF(id) {
   y += recapH + 8;
 
   /* Conditions */
-  const condTxt = 'Conditions : Ce devis est valable 30 jours a compter de sa date d\'emission. Les prestations sont realisees dans le cadre du service a la personne (SAP) - agrement n° '+(s.sap||'-')+'. Le client beneficie d\'une reduction fiscale de 50 % sur les sommes versees (dans la limite des plafonds legaux). Paiement par cheque, virement ou especes a reception de la facture. Tout devis accepte vaut bon de commande.';
+  const condTxt = 'Conditions : Ce devis est valable 30 jours a compter de sa date d\'emission. Paiement par virement, especes ou TPE a reception de la facture. Tout devis accepte vaut bon de commande.';
   const condLines = doc.splitTextToSize(condTxt, CW-8);
   const condH = condLines.length*4.2+8;
   doc.setFillColor(...GS); doc.setDrawColor(...GR); doc.setLineWidth(0.3);
@@ -1628,7 +1669,23 @@ function importBackup(input) {
 }
 
 /* ════════════════════════ INIT ════════════════════════ */
-showList();
+// Vérifier si un ID est passé en paramètre URL
+const urlParams = new URLSearchParams(window.location.search);
+const idParam = urlParams.get('id');
+
+if (idParam) {
+  // Charger le devis directement
+  const devisId = decodeURIComponent(idParam);
+  const devis = devisList.find(d => d.id === devisId);
+  if (devis) {
+    editDevis(devisId);
+  } else {
+    showList();
+  }
+} else {
+  showList();
+}
+
 if (!settings.nom) setTimeout(() => showToast('👋 Bienvenue ! Renseignez vos infos dans ⚙ Paramètres.', 4500), 600);
 </script>
 </body>

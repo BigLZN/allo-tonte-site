@@ -89,6 +89,16 @@
     .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); }
     .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
 
+    /* Mail collector */
+    .mail-collector { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px; }
+    .mail-collector-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .mail-collector-title { font-size: 1rem; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+    .mail-collector-subtitle { font-size: .8rem; color: var(--gray-500); line-height: 1.5; }
+    .mail-collector-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mail-collector-textarea { width: 100%; min-height: 96px; border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: .86rem; line-height: 1.6; background: var(--gray-50); color: var(--gray-900); resize: vertical; }
+    .mail-collector-textarea:focus { outline: none; border-color: var(--green-light); }
+    .mail-collector-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: var(--gray-500); font-size: .74rem; gap: 10px; flex-wrap: wrap; }
+
     /* Modal */
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
     .overlay.open { opacity: 1; pointer-events: all; }
@@ -166,6 +176,7 @@
     <a href="planning.html"           class="nav-link">📅 Planning</a>
     <div class="nav-sep"></div>
     <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="facture.html"            class="nav-link">🧾 Factures</a>
     <a href="clients.html"            class="nav-link active">👥 Clients</a>
     <div class="nav-sep"></div>
     <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
@@ -194,6 +205,24 @@
     </select>
   </div>
 
+  <div class="mail-collector">
+    <div class="mail-collector-head">
+      <div>
+        <div class="mail-collector-title">📬 Liste de diffusion clients</div>
+        <div class="mail-collector-subtitle">Regroupe tous les e-mails clients valides pour vos campagnes promotionnelles.</div>
+      </div>
+      <div class="mail-collector-actions">
+        <button class="btn btn-secondary btn-sm" onclick="copyClientEmails()">📋 Copier</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadClientEmails()">⬇ Télécharger .txt</button>
+      </div>
+    </div>
+    <textarea class="mail-collector-textarea" id="clients-emails-list" readonly></textarea>
+    <div class="mail-collector-meta">
+      <span id="clients-emails-count">0 e-mail</span>
+      <span>Les adresses sont séparées par un point-virgule.</span>
+    </div>
+  </div>
+
   <div class="clients-grid" id="clients-grid"></div>
 </div>
 
@@ -215,6 +244,7 @@
 const devisList     = JSON.parse(localStorage.getItem('at-devis')         || '[]');
 const interventions = JSON.parse(localStorage.getItem('at-interventions') || '[]');
 const factures      = JSON.parse(localStorage.getItem('at-factures')      || '[]');
+const clientsDir    = JSON.parse(localStorage.getItem('at-clients')       || '[]');
 
 /* ── Helpers ── */
 function fmt(n)    { return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u202f€'; }
@@ -222,6 +252,9 @@ function today()   { return new Date().toISOString().slice(0, 10); }
 function fmtDate(s){ if (!s) return '—'; const [y,m,d] = s.split('-'); return `${d}/${m}/${y}`; }
 function esc(s)    { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function initials(p, n) { return ((p||'?').charAt(0) + (n||'?').charAt(0)).toUpperCase(); }
+function normalizeStatus(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+function isAcceptedStatus(s) { const v = normalizeStatus(s); return ['accepte', 'accepted', 'accepté'].includes(v); }
+function isPaidStatus(s) { const v = normalizeStatus(s); return ['payee', 'paye', 'payée'].includes(v); }
 function showToast(msg, ms = 2600) {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), ms);
@@ -236,50 +269,122 @@ function normalizeKey(prenom, nom) {
   return `${(prenom || '').trim().toLowerCase()}|${(nom || '').trim().toLowerCase()}`;
 }
 
+function ensureClientEntry(map, client) {
+  const k = normalizeKey(client?.prenom, client?.nom);
+  if (!k || k === '|') return null;
+  if (!map[k]) {
+    map[k] = { prenom: client?.prenom || '', nom: client?.nom || '', contact: {}, devis: [], interventions: [], factures: [], lastDate: '' };
+  }
+  const c = map[k];
+  if (client?.email && !c.contact.email) c.contact.email = client.email;
+  if (client?.tel   && !c.contact.tel)   c.contact.tel   = client.tel;
+  if (client?.adresse && !c.contact.adresse) c.contact.adresse = client.adresse;
+  if (client?.cp && !c.contact.cp) c.contact.cp = client.cp;
+  if (client?.ville && !c.contact.ville) c.contact.ville = client.ville;
+  return c;
+}
+
 function buildClients() {
   const map = {};
 
+  clientsDir.forEach(c => ensureClientEntry(map, c));
+
   devisList.forEach(d => {
-    const k = normalizeKey(d.client.prenom, d.client.nom);
-    if (!k || k === '|') return;
-    if (!map[k]) map[k] = { prenom: d.client.prenom, nom: d.client.nom, contact: {}, devis: [], interventions: [], factures: [], lastDate: '' };
-    const c = map[k];
-    if (d.client.email && !c.contact.email) c.contact.email = d.client.email;
-    if (d.client.tel   && !c.contact.tel)   c.contact.tel   = d.client.tel;
-    if (d.client.adresse && !c.contact.adresse) c.contact.adresse = d.client.adresse;
-    if (d.client.ville && !c.contact.ville) c.contact.ville = d.client.ville;
+    const c = ensureClientEntry(map, d.client);
+    if (!c) return;
     c.devis.push(d);
     if (d.date > c.lastDate) c.lastDate = d.date;
   });
 
   interventions.forEach(i => {
-    const k = normalizeKey(i.client.prenom, i.client.nom);
-    if (!k || k === '|') return;
-    if (!map[k]) map[k] = { prenom: i.client.prenom, nom: i.client.nom, contact: {}, devis: [], interventions: [], factures: [], lastDate: '' };
-    const c = map[k];
-    if (i.client.email && !c.contact.email) c.contact.email = i.client.email;
-    if (i.client.tel   && !c.contact.tel)   c.contact.tel   = i.client.tel;
-    if (i.client.adresse && !c.contact.adresse) c.contact.adresse = i.client.adresse;
+    const c = ensureClientEntry(map, i.client);
+    if (!c) return;
     c.interventions.push(i);
     if (i.date > c.lastDate) c.lastDate = i.date;
   });
 
   factures.forEach(f => {
-    const k = normalizeKey(f.client.prenom, f.client.nom);
-    if (!k || k === '|') return;
-    if (!map[k]) return; // factures toujours liées à une intervention
-    const c = map[k];
+    const c = ensureClientEntry(map, f.client);
+    if (!c) return;
     c.factures.push(f);
+    if (f.date > c.lastDate) c.lastDate = f.date;
   });
 
   return Object.values(map).map(c => {
-    c.ca        = c.devis.filter(d => d.status === 'accepté').reduce((s, d) => s + (d.total || 0), 0);
-    c.caFacture = c.factures.filter(f => f.status === 'payee').reduce((s, f) => s + (f.total || 0), 0);
+    c.ca        = c.devis.filter(d => isAcceptedStatus(d.status)).reduce((s, d) => s + (d.total || 0), 0);
+    c.caFacture = c.factures.filter(f => isPaidStatus(f.status)).reduce((s, f) => s + (f.total || 0), 0);
     return c;
   });
 }
 
 let allClients = buildClients();
+
+function getClientEmails() {
+  const seen = new Set();
+  const emails = [];
+  allClients.forEach(c => {
+    const email = (c.contact.email || '').trim().toLowerCase();
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !seen.has(email)) {
+      seen.add(email);
+      emails.push(email);
+    }
+  });
+  return emails;
+}
+
+function renderMailCollector() {
+  const emails = getClientEmails();
+  const textarea = document.getElementById('clients-emails-list');
+  const count = document.getElementById('clients-emails-count');
+  if (textarea) textarea.value = emails.join('; ');
+  if (count) count.textContent = `${emails.length} e-mail${emails.length > 1 ? 's' : ''} valide${emails.length > 1 ? 's' : ''}`;
+}
+
+function fallbackCopyText(text) {
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  temp.setAttribute('readonly', '');
+  temp.style.position = 'fixed';
+  temp.style.left = '-9999px';
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand('copy');
+  document.body.removeChild(temp);
+}
+
+function copyClientEmails() {
+  const emails = getClientEmails().join('; ');
+  if (!emails) {
+    showToast('Aucun e-mail client disponible');
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(emails)
+      .then(() => showToast('✓ E-mails copiés'))
+      .catch(() => { fallbackCopyText(emails); showToast('✓ E-mails copiés'); });
+  } else {
+    fallbackCopyText(emails);
+    showToast('✓ E-mails copiés');
+  }
+}
+
+function downloadClientEmails() {
+  const emails = getClientEmails().join('; ');
+  if (!emails) {
+    showToast('Aucun e-mail client disponible');
+    return;
+  }
+  const blob = new Blob([emails], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mails-clients-${today()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ Fichier téléchargé');
+}
 
 /* ── Stats ── */
 function renderStats() {
@@ -337,8 +442,8 @@ function renderClients() {
       </div>
       <div class="client-stats">
         <div class="client-stat"><div class="client-stat-val">${fmt(c.ca).replace('\u202f€', '€')}</div><div class="client-stat-lbl">CA</div></div>
-        <div class="client-stat"><div class="client-stat-val">${c.interventions.filter(i => i.status !== 'annule').length}</div><div class="client-stat-lbl">Passages</div></div>
-        <div class="client-stat"><div class="client-stat-val">${c.factures.filter(f => f.status === 'payee').length}</div><div class="client-stat-lbl">Payées</div></div>
+        <div class="client-stat"><div class="client-stat-val">${c.interventions.filter(i => !['annule', 'annulé'].includes(normalizeStatus(i.status))).length}</div><div class="client-stat-lbl">Passages</div></div>
+        <div class="client-stat"><div class="client-stat-val">${c.factures.filter(f => isPaidStatus(f.status)).length}</div><div class="client-stat-lbl">Payées</div></div>
       </div>
       <div class="client-tags">${tags}</div>
     </div>`;
@@ -363,8 +468,8 @@ function openClient(prenom, nom) {
     { val: fmt(c.ca).replace('\u202f€', '€'), lbl: 'CA accepté' },
     { val: fmt(c.caFacture).replace('\u202f€', '€'), lbl: 'Encaissé' },
     { val: String(c.devis.length), lbl: 'Devis' },
-    { val: String(c.interventions.filter(i => i.status !== 'annule').length), lbl: 'Passages' },
-    { val: String(c.factures.filter(f => f.status === 'payee').length), lbl: 'Factures payées' },
+    { val: String(c.interventions.filter(i => !['annule', 'annulé'].includes(normalizeStatus(i.status))).length), lbl: 'Passages' },
+    { val: String(c.factures.filter(f => isPaidStatus(f.status)).length), lbl: 'Factures payées' },
   ];
 
   const statsHtml = `<div class="client-detail-stats">${detailStats.map(s =>
@@ -384,6 +489,7 @@ function openClient(prenom, nom) {
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;">
+      <button class="btn btn-primary btn-sm" onclick="createDevisFromClient('${esc(c.prenom)}','${esc(c.nom)}')">📋 Créer un devis</button>
       ${c.contact.email ? `<a href="mailto:${esc(c.contact.email)}" class="btn btn-secondary btn-sm">📧 Email</a>` : ''}
       ${c.contact.tel   ? `<a href="tel:${esc(c.contact.tel)}"   class="btn btn-secondary btn-sm">📞 Appeler</a>` : ''}
     </div>
@@ -470,9 +576,77 @@ function exportClientsCSV() {
   showToast('✓ CSV exporté');
 }
 
+/* ── Create devis from client ── */
+function createDevisFromClient(prenom, nom) {
+  const c = allClients.find(x => x.prenom === prenom && x.nom === nom);
+  if (!c) {
+    showToast('❌ Client introuvable');
+    return;
+  }
+
+  // Récupérer la liste des devis existants
+  const devisList = JSON.parse(localStorage.getItem('at-devis') || '[]');
+  
+  // Générer le prochain ID
+  const y = new Date().getFullYear();
+  const nums = devisList.map(d => {
+    const p = d.id.split('-');
+    return parseInt(p[2]) || 0;
+  });
+  const max = nums.length ? Math.max(...nums) : 0;
+  const newId = `DEV-${y}-${String(max + 1).padStart(3, '0')}`;
+  
+  // Créer le devis pré-rempli
+  const today = new Date().toISOString().slice(0, 10);
+  const addDays = (d, n) => {
+    const dt = new Date(d);
+    dt.setDate(dt.getDate() + n);
+    return dt.toISOString().slice(0, 10);
+  };
+  
+  // Récupérer la superficie des devis précédents si elle existe
+  let superficie = '';
+  if (c.devis.length > 0) {
+    const lastDevisWithSuperficie = c.devis.find(d => d.superficie);
+    if (lastDevisWithSuperficie) {
+      superficie = lastDevisWithSuperficie.superficie;
+    }
+  }
+  
+  const newDevis = {
+    id: newId,
+    date: today,
+    validite: addDays(today, 30),
+    status: 'brouillon',
+    client: {
+      prenom: c.prenom || '',
+      nom: c.nom || '',
+      adresse: c.contact.adresse || '',
+      cp: c.contact.cp || '',
+      ville: c.contact.ville || '',
+      email: c.contact.email || '',
+      tel: c.contact.tel || ''
+    },
+    lignes: [],
+    sap: true,
+    remise: 0,
+    notes: '',
+    total: 0,
+    superficie: superficie
+  };
+  
+  // Ajouter le devis à la liste
+  devisList.push(newDevis);
+  localStorage.setItem('at-devis', JSON.stringify(devisList));
+  
+  // Rediriger vers devis.html avec l'ID du nouveau devis
+  window.location.href = `devis.html?id=${encodeURIComponent(newId)}`;
+}
+
 /* ── Init ── */
 renderStats();
 renderClients();
+renderMailCollector();
 </script>
 </body>
 </html>

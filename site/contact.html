@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src https://api.web3forms.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com; img-src 'self' data: https:; form-action https://api.web3forms.com 'self'; frame-src https://www.google.com https://www.googletagmanager.com; frame-ancestors 'none'; base-uri 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://api.web3forms.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com; img-src 'self' data: https:; form-action https://api.web3forms.com 'self'; frame-ancestors 'none'; base-uri 'self';" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Devis Gratuit Jardinier Reims — Contact | Allo Tonte 07 56 95 15 66</title>
-  <meta name="description" content="Demandez votre devis gratuit sous 48h à Allo Tonte, jardinier à Reims et agglomération (51). Tél : 07 56 95 15 66. Hermonville 51220. Tonte, débroussaillage, Karcher." />
+  <meta name="description" content="Demandez votre devis gratuit sous 48h à Allo Tonte, jardinier à Reims et agglomération (51). Tél : 07 56 95 15 66. Hermonville 51220. Tonte, débroussaillage." />
   <meta name="keywords" content="devis jardinier reims, contact jardinier reims, jardinier reims telephone, tonte pelouse reims devis, jardinage reims devis gratuit, jardinier hermonville 51220" />
   <link rel="canonical" href="https://allo-tonte-site.onrender.com/contact.html" />
   <meta name="robots" content="index, follow" />
@@ -18,7 +18,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://allo-tonte-site.onrender.com/contact.html" />
   <meta property="og:title" content="Devis Gratuit Jardinier Reims | Allo Tonte — 07 56 95 15 66" />
-  <meta property="og:description" content="Devis gratuit sous 48h. Jardinier à Reims et agglomération. Tonte pelouse, débroussaillage, Karcher." />
+  <meta property="og:description" content="Devis gratuit sous 48h. Jardinier à Reims et agglomération. Tonte pelouse, débroussaillage." />
   <meta property="og:image" content="https://allo-tonte-site.onrender.com/après-pelouse.png" />
   <meta property="og:locale" content="fr_FR" />
   <meta property="og:site_name" content="Allo Tonte" />
@@ -45,14 +45,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-53JGH6XX');</script>
-  <!-- End Google Tag Manager -->
+  <!-- Cookies & mesure d'audience : chargés uniquement après consentement, voir cookie-consent.js -->
+  <script src="cookie-consent.js"></script>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-53JGH6XX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 
 <!-- ══════════ NAV ══════════ -->
 <nav id="navbar">
@@ -64,6 +60,8 @@
       <li><a href="index.html">Accueil</a></li>
       <li><a href="services-tarifs.html">Services &amp; Tarifs</a></li>
       <li><a href="abonnement.html">Abonnement &amp; SAP</a></li>
+      <li><a href="faq.html">FAQ</a></li>
+      <li><a href="blog.html">Blog</a></li>
       <li><a href="contact.html" class="nav-cta">Devis gratuit</a></li>
     </ul>
     <button class="nav-burger" id="navBurger" aria-label="Menu">
@@ -80,6 +78,8 @@
     <p>Remplissez le formulaire ou appelez directement. Je vous réponds rapidement, sans engagement.</p>
   </div>
 </div>
+
+<div id="seasonalBanner"></div>
 
 <!-- ══════════ CONTACT ══════════ -->
 <section id="contact" class="reveal">
@@ -191,14 +191,23 @@
                 <input type="checkbox" id="svc1" name="services[]" value="Tonte pelouse" /><label for="svc1">🌿 Tonte pelouse</label>
                 <input type="checkbox" id="svc2" name="services[]" value="Souffleur" /><label for="svc2">💨 Souffleur</label>
                 <input type="checkbox" id="svc3" name="services[]" value="Débroussaillage" /><label for="svc3">🌾 Débroussaillage</label>
-                <input type="checkbox" id="svc4" name="services[]" value="Karcher" /><label for="svc4">💧 Karcher</label>
                 <input type="checkbox" id="svc5" name="services[]" value="Taille de haies" /><label for="svc5">✂️ Taille de haies</label>
                 <input type="checkbox" id="svc6" name="services[]" value="Abonnement annuel" /><label for="svc6">📅 Abonnement annuel</label>
+                <input type="checkbox" id="svc7" name="services[]" value="Scarification" /><label for="svc7">🌱 Scarification</label>
+                <input type="checkbox" id="svc8" name="services[]" value="Création de potager" /><label for="svc8">🥕 Création de potager</label>
+                <input type="checkbox" id="svc9" name="services[]" value="Pose de gravier" /><label for="svc9">🪨 Pose de gravier</label>
+                <input type="checkbox" id="svc10" name="services[]" value="Aménagement de jardin" /><label for="svc10">🏡 Aménagement de jardin</label>
               </div>
             </div>
             <div class="form-group full">
               <label for="message">Message (optionnel)</label>
               <textarea id="message" name="message" placeholder="Précisions sur votre jardin, contraintes particulières…" maxlength="1000"></textarea>
+            </div>
+            <div class="form-group full">
+              <label class="form-consent">
+                <input type="checkbox" id="rappelSaison" name="rappel_saisonnier" value="oui" />
+                📬 Me prévenir avant chaque saison (offres &amp; conseils d'entretien)
+              </label>
             </div>
           </div>
           <div class="form-submit">
@@ -229,6 +238,8 @@
         <a href="index.html">Accueil</a>
         <a href="services-tarifs.html">Services &amp; Tarifs</a>
         <a href="abonnement.html">Abonnement &amp; SAP</a>
+        <a href="faq.html">FAQ</a>
+        <a href="blog.html">Blog</a>
         <a href="contact.html">Contact</a>
         <a href="mentions-legales.html">Mentions légales</a>
       </div>
@@ -244,6 +255,7 @@
 <button id="totop" aria-label="Retour en haut">↑</button>
 
 <script src="main.js"></script>
+<script src="season.js"></script>
 </body>
 </html>
 

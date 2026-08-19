@@ -14,10 +14,12 @@ if (totop) totop.addEventListener('click', () => window.scrollTo({ top: 0, behav
 const burger   = document.getElementById('navBurger');
 const navLinks = document.getElementById('navLinks');
 
-burger.addEventListener('click', () => navLinks.classList.toggle('open'));
-navLinks.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', () => navLinks.classList.remove('open'));
-});
+if (burger && navLinks) {
+  burger.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => navLinks.classList.remove('open'));
+  });
+}
 
 /* ── Active nav link ── */
 const currentPage = location.pathname.split('/').pop() || 'index.html';

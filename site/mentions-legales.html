@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src https://api.web3forms.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com; img-src 'self' data: https:; form-action https://api.web3forms.com 'self'; frame-src https://www.google.com https://www.googletagmanager.com; frame-ancestors 'none'; base-uri 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://api.web3forms.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com; img-src 'self' data: https:; form-action https://api.web3forms.com 'self'; frame-ancestors 'none'; base-uri 'self';" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Mentions légales &amp; RGPD | Allo Tonte</title>
   <meta name="description" content="Mentions légales et politique de confidentialité d'Allo Tonte — jardinier auto-entrepreneur à Hermonville (51220), SIRET 10601987000018." />
@@ -15,14 +15,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-53JGH6XX');</script>
-  <!-- End Google Tag Manager -->
+  <!-- Cookies & mesure d'audience : chargés uniquement après consentement, voir cookie-consent.js -->
+  <script src="cookie-consent.js"></script>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-53JGH6XX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 
 <!-- ══════════ NAV ══════════ -->
 <nav id="navbar">
@@ -34,6 +30,8 @@
       <li><a href="index.html">Accueil</a></li>
       <li><a href="services-tarifs.html">Services &amp; Tarifs</a></li>
       <li><a href="abonnement.html">Abonnement &amp; SAP</a></li>
+      <li><a href="faq.html">FAQ</a></li>
+      <li><a href="blog.html">Blog</a></li>
       <li><a href="contact.html" class="nav-cta">Devis gratuit</a></li>
     </ul>
     <button class="nav-burger" id="navBurger" aria-label="Menu">
@@ -116,11 +114,11 @@
       </div>
 
       <!-- Cookies & Analytics -->
-      <div>
+      <div id="cookies">
         <h2 style="font-size:1.3rem;font-weight:800;color:var(--green-dark);margin-bottom:1.2rem;padding-bottom:.6rem;border-bottom:2px solid var(--green-pale);">4. Cookies &amp; Mesure d'audience</h2>
         <div style="font-size:.92rem;color:#444;line-height:1.8;display:flex;flex-direction:column;gap:1rem;">
-          <p>Ce site utilise <strong>Google Tag Manager</strong> et <strong>Google Analytics 4</strong> pour mesurer les visites et l'audience à des fins statistiques internes. Ces outils peuvent déposer des cookies analytiques.</p>
-          <p>Vous pouvez refuser ces cookies à tout moment via les paramètres de votre navigateur ou en installant le <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" style="color:var(--green-dark);">module de désactivation Google Analytics</a>.</p>
+          <p>Ce site utilise <strong>Google Tag Manager</strong> et <strong>Google Analytics 4</strong> pour mesurer les visites et l'audience à des fins statistiques internes. Ces outils ne se chargent qu'après votre accord, donné via le bandeau affiché à votre première visite.</p>
+          <p>Vous pouvez modifier votre choix à tout moment : <button type="button" onclick="window.openCookiePreferences && window.openCookiePreferences()" style="background:var(--green-pale);color:var(--green-dark);border:none;border-radius:99px;padding:8px 18px;font-weight:700;font-size:.85rem;cursor:pointer;">Gérer mes cookies</button></p>
           <p>Aucun cookie publicitaire ou de tracking cross-site n'est utilisé.</p>
         </div>
       </div>
@@ -164,6 +162,8 @@
         <a href="index.html">Accueil</a>
         <a href="services-tarifs.html">Services &amp; Tarifs</a>
         <a href="abonnement.html">Abonnement &amp; SAP</a>
+        <a href="faq.html">FAQ</a>
+        <a href="blog.html">Blog</a>
         <a href="contact.html">Contact</a>
         <a href="mentions-legales.html">Mentions légales</a>
       </div>
@@ -176,6 +176,7 @@
   <a href="tel:0756951566" class="mb-call">📞 Appeler</a>
   <a href="contact.html" class="mb-devis">📋 Devis gratuit</a>
 </div>
+<a href="contact.html" id="desktopCta">📋 Devis gratuit sous 48h</a>
 <button id="totop" aria-label="Retour en haut">↑</button>
 
 <script src="main.js"></script>

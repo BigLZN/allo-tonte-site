@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allo Tonte — Factures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:  #153d07;
+      --green:       #1e5c0a;
+      --green-light: #4a9e25;
+      --green-pale:  #e8f5e0;
+      --red:         #c0392b;
+      --red-pale:    #fde8e7;
+      --blue:        #2563eb;
+      --blue-pale:   #eff6ff;
+      --orange:      #ea6c00;
+      --orange-pale: #fff3e0;
+      --purple:      #7c3aed;
+      --purple-pale: #f3f0ff;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-400:    #9ca3af;
+      --gray-500:    #6b7280;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+      --radius:      10px;
+      --shadow:      0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: var(--gray-100);
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: var(--green-dark); display: flex; align-items: center;
+      padding: 0 20px; gap: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    .navbar-logo { height: 34px; width: auto; background: #d0d0d0; border-radius: 6px; padding: 3px 8px; margin-right: 10px; }
+    .nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+    .nav-link { color: rgba(255,255,255,.65); font-size: .78rem; font-weight: 600; text-decoration: none; padding: 6px 10px; border-radius: 6px; transition: all .15s; white-space: nowrap; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,.1); }
+    .nav-link.active { color: #fff; background: rgba(255,255,255,.18); }
+    .nav-sep { width: 1px; height: 20px; background: rgba(255,255,255,.15); margin: 0 4px; }
+
+    /* ── Layout ── */
+    .main { margin-top: 56px; padding: 28px 24px; max-width: 1240px; margin-left: auto; margin-right: auto; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px; border: none;
+      font-family: inherit; font-size: .82rem; font-weight: 600;
+      cursor: pointer; transition: opacity .15s; text-decoration: none;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-green   { background: var(--green); color: #fff; }
+    .btn-blue    { background: var(--blue); color: #fff; }
+    .btn-gray    { background: var(--gray-200); color: var(--gray-700); }
+    .btn-red     { background: var(--red); color: #fff; }
+    .btn-orange  { background: var(--orange); color: #fff; }
+    .btn-sm { padding: 6px 12px; font-size: .76rem; }
+    .btn-secondary { background: var(--white); border: 1.5px solid var(--gray-200); color: var(--gray-700); }
+    .btn-secondary:hover { border-color: var(--gray-400); background: var(--gray-50); opacity: 1; }
+
+    /* ── Stats ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+    .stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); }
+    .stat-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); margin-bottom: 5px; }
+    .stat-val   { font-size: 1.55rem; font-weight: 900; color: var(--gray-900); }
+    .stat-sub   { font-size: .72rem; color: var(--gray-500); margin-top: 2px; }
+
+    /* ── Filter bar ── */
+    .filter-bar { display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--gray-200); flex-wrap: wrap; }
+    .filter-tab { padding: 6px 14px; border-radius: 99px; font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--gray-200); background: var(--white); color: var(--gray-500); transition: all .15s; }
+    .filter-tab:hover { border-color: var(--green); color: var(--green); }
+    .filter-tab.active { background: var(--green); border-color: var(--green); color: white; }
+    .filter-spacer { flex: 1; }
+    .search-input { border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 7px 12px; font-family: inherit; font-size: .82rem; width: 220px; transition: border-color .15s; }
+    .search-input:focus { outline: none; border-color: var(--green-light); }
+
+    /* ── Card ── */
+    .card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card-header { padding: 14px 20px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; gap: 10px; }
+    .card-header h2 { font-size: .92rem; font-weight: 700; color: var(--gray-900); }
+    .card-body { padding: 20px; }
+
+    /* ── Table ── */
+    .facture-table { width: 100%; border-collapse: collapse; }
+    .facture-table th { text-align: left; padding: 10px 14px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+    .facture-table td { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); font-size: .85rem; vertical-align: middle; }
+    .facture-table tr:last-child td { border-bottom: none; }
+    .facture-table tbody tr:hover { background: var(--gray-50); cursor: pointer; }
+
+    /* ── Badges ── */
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .status-brouillon { background: var(--gray-100); color: var(--gray-500); }
+    .status-envoyée   { background: var(--blue-pale); color: var(--blue); }
+    .status-payée     { background: var(--green-pale); color: var(--green); }
+    .status-annulée   { background: var(--red-pale); color: var(--red); }
+    .sap-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: .68rem; font-weight: 700; }
+    .sap-on  { background: var(--blue-pale); color: var(--blue); }
+    .sap-off { background: var(--gray-100); color: var(--gray-400); }
+
+    /* ── Actions ── */
+    .tbl-actions { display: flex; gap: 6px; }
+    .action-btn { border: 1px solid var(--gray-200); background: var(--white); border-radius: 6px; padding: 5px 10px; font-family: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .15s; color: var(--gray-700); }
+    .action-btn:hover { border-color: var(--gray-400); background: var(--gray-50); }
+    .action-btn.pdf   { color: var(--green); border-color: #b0e0a0; }
+    .action-btn.pdf:hover   { background: var(--green-pale); }
+    .action-btn.email { color: var(--blue); border-color: #bcd0f8; }
+    .action-btn.email:hover { background: var(--blue-pale); }
+    .action-btn.danger { color: var(--red); border-color: #f0c0c0; }
+    .action-btn.danger:hover { background: var(--red-pale); }
+
+    /* ── Empty ── */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: .9rem; line-height: 1.7; }
+    .empty-state a { color: var(--green); font-weight: 600; }
+
+    /* ── Edit header ── */
+    .edit-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .edit-header h1 { font-size: 1.3rem; font-weight: 800; }
+    .back-btn { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 8px 14px; font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; color: var(--gray-700); transition: all .15s; }
+    .back-btn:hover { background: var(--gray-50); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: .7rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; }
+    .form-input { border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: .88rem; color: var(--gray-900); background: var(--white); transition: border-color .15s; width: 100%; }
+    .form-input:focus { outline: none; border-color: var(--green-light); }
+    .form-input::placeholder { color: var(--gray-300); }
+    select.form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+
+    /* ── SAP Toggle ── */
+    .sap-toggle-block {
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      transition: all .2s;
+      border: 2px solid var(--gray-200);
+      background: var(--gray-50);
+    }
+    .sap-toggle-block.sap-active {
+      border-color: var(--blue);
+      background: var(--blue-pale);
+    }
+    .sap-toggle-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .sap-toggle-text { flex: 1; }
+    .sap-toggle-text strong { font-size: .92rem; display: block; margin-bottom: 3px; }
+    .sap-toggle-text span { font-size: .78rem; color: var(--gray-500); line-height: 1.5; }
+    .sap-toggle-block.sap-active .sap-toggle-text span { color: var(--blue); }
+
+    /* Switch */
+    .switch { position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--gray-300); border-radius: 99px; transition: .2s; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    input:checked + .slider { background: var(--blue); }
+    input:checked + .slider:before { transform: translateX(24px); }
+    .sap-amount-info { display: none; margin-top: 10px; padding: 10px 14px; background: rgba(37,99,235,.08); border-radius: 8px; font-size: .82rem; color: var(--blue); font-weight: 600; }
+    .sap-toggle-block.sap-active .sap-amount-info { display: block; }
+
+    /* ── Lines table ── */
+    .lines-table { width: 100%; border-collapse: collapse; }
+    .lines-table th { text-align: left; padding: 8px 10px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+    .lines-table th.right { text-align: right; }
+    .lines-table td { padding: 6px 8px; border-bottom: 1px solid var(--gray-100); }
+    .lines-table input[type=text]   { border: 1.5px solid transparent; border-radius: 6px; padding: 6px 8px; font-family: inherit; font-size: .85rem; width: 100%; transition: border-color .15s; background: transparent; }
+    .lines-table input[type=number] { border: 1.5px solid transparent; border-radius: 6px; padding: 6px 8px; font-family: inherit; font-size: .85rem; width: 100%; text-align: right; transition: border-color .15s; background: transparent; }
+    .lines-table input:focus { outline: none; border-color: var(--green-light); background: white; }
+    .col-desc  { min-width: 240px; }
+    .col-qty   { width: 80px; }
+    .col-pu    { width: 110px; }
+    .col-total { width: 110px; text-align: right; font-weight: 700; color: var(--gray-900); padding-right: 14px !important; }
+    .col-del   { width: 36px; text-align: center; }
+    .del-line-btn { background: none; border: none; color: var(--gray-300); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 4px; transition: all .15s; }
+    .del-line-btn:hover { background: var(--red-pale); color: var(--red); }
+
+    /* ── Totals ── */
+    .totals-box { display: flex; justify-content: flex-end; margin-top: 12px; }
+    .totals-inner { width: 300px; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: .85rem; }
+    .total-row.separator { border-top: 1.5px solid var(--gray-200); margin-top: 6px; padding-top: 10px; }
+    .total-row .lbl { color: var(--gray-500); }
+    .total-row .val { font-weight: 700; }
+    .total-row.big .lbl { font-size: 1rem; font-weight: 800; color: var(--gray-900); }
+    .total-row.big .val { font-size: 1.2rem; font-weight: 900; color: var(--green-dark); }
+    .sap-rows { background: var(--blue-pale); border-radius: 8px; padding: 8px 12px; margin-top: 8px; }
+    .sap-row-line { display: flex; justify-content: space-between; font-size: .82rem; padding: 3px 0; }
+    .sap-row-line .lbl { color: var(--blue); }
+    .sap-row-line .val { font-weight: 700; color: var(--blue); }
+    .sap-row-line.net .lbl { font-weight: 800; color: var(--green-dark); }
+    .sap-row-line.net .val { font-weight: 900; color: var(--green-dark); font-size: .9rem; }
+
+    /* ── Add line bar ── */
+    .add-line-bar { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .catalogue-select { flex: 1; min-width: 200px; border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 7px 12px; font-family: inherit; font-size: .82rem; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+    .catalogue-select:focus { outline: none; border-color: var(--green-light); }
+
+    /* ── Dashboard header ── */
+    .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .dash-header h1 { font-size: 1.5rem; font-weight: 800; }
+
+    /* ── Toast ── */
+    #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--gray-900); color: white; padding: 10px 22px; border-radius: 99px; font-size: .82rem; font-weight: 600; z-index: 999; opacity: 0; pointer-events: none; transition: all .2s; white-space: nowrap; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="allotonte-removebg-preview.png" alt="Allo Tonte" class="navbar-logo" onerror="this.style.display='none'">
+  <div class="nav-links">
+    <a href="planning.html"           class="nav-link">📅 Planning</a>
+    <div class="nav-sep"></div>
+    <a href="devis.html"              class="nav-link">📋 Devis</a>
+    <a href="facture.html"            class="nav-link active">🧾 Factures</a>
+    <a href="clients.html"            class="nav-link">👥 Clients</a>
+    <div class="nav-sep"></div>
+    <a href="contrat-abonnement.html" class="nav-link">✍️ Contrat</a>
+    <a href="fiche-passage.html"      class="nav-link">🚪 Fiche passage</a>
+    <a href="devis-terrain.html"      class="nav-link">📝 Devis terrain</a>
+    <a href="attestation-sap.html"    class="nav-link">🏛 Attestation SAP</a>
+    <a href="materiel.html"           class="nav-link">🔧 Matériel</a>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- ════ LIST VIEW ════ -->
+  <div id="view-list" class="view active">
+    <div class="dash-header">
+      <h1>🧾 Factures</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn btn-green" onclick="newFacture()">＋ Nouvelle facture</button>
+      </div>
+    </div>
+
+    <div id="stats-row" class="stats-row"></div>
+
+    <div class="card">
+      <div class="filter-bar" id="filter-bar"></div>
+      <div id="list-body"></div>
+    </div>
+  </div>
+
+  <!-- ════ EDIT VIEW ════ -->
+  <div id="view-edit" class="view">
+    <div class="edit-header">
+      <button class="back-btn" onclick="showList()">← Retour</button>
+      <h1 id="edit-title">Nouvelle facture</h1>
+      <span id="edit-badge"></span>
+      <div style="flex:1;"></div>
+      <button class="btn btn-gray btn-sm" id="btn-duplicate" style="display:none;" onclick="duplicateCurrentFacture()">⧉ Dupliquer</button>
+      <button class="btn btn-red  btn-sm" id="btn-delete"    style="display:none;" onclick="deleteCurrentFacture()">🗑 Supprimer</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveFactureForm()">💾 Sauvegarder</button>
+      <button class="btn btn-blue btn-sm" onclick="generatePDF(currentId)">⬇ PDF</button>
+    </div>
+
+    <div class="two-col">
+      <!-- Infos facture -->
+      <div class="card">
+        <div class="card-header"><h2>📄 Informations facture</h2></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">N° facture</label>
+              <input class="form-input" id="f-id" readonly style="background:var(--gray-50);color:var(--gray-500);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut</label>
+              <select class="form-input" id="f-status" onchange="onStatusChange()">
+                <option value="brouillon">Brouillon</option>
+                <option value="envoyée">Envoyée</option>
+                <option value="payée">Payée</option>
+                <option value="annulée">Annulée</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date d'émission</label>
+              <input type="date" class="form-input" id="f-date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date d'échéance</label>
+              <input type="date" class="form-input" id="f-echeance">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client -->
+      <div class="card">
+        <div class="card-header">
+          <h2>👤 Client</h2>
+          <div style="flex:1;"></div>
+          <select id="client-quick" class="form-input" style="max-width:200px;font-size:.78rem;padding:5px 10px;" onchange="loadClientQuick()">
+            <option value="">— Importer client —</option>
+          </select>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Prénom</label>
+              <input class="form-input" id="f-prenom" placeholder="Prénom">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom</label>
+              <input class="form-input" id="f-nom" placeholder="NOM">
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Adresse</label>
+              <input class="form-input" id="f-adresse" placeholder="N° et rue">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Code postal</label>
+              <input class="form-input" id="f-cp" placeholder="51220">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ville</label>
+              <input class="form-input" id="f-ville" placeholder="Hermonville">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="f-email" placeholder="email@exemple.fr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Téléphone</label>
+              <input type="tel" class="form-input" id="f-tel" placeholder="06 …">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prestations -->
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-header"><h2>🌿 Prestations</h2></div>
+      <div class="card-body">
+        <table class="lines-table">
+          <thead>
+            <tr>
+              <th class="col-desc">Prestation</th>
+              <th class="col-qty right">Qté</th>
+              <th class="col-pu right">P.U. (€)</th>
+              <th class="col-total">Total</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="lines-body"></tbody>
+        </table>
+        <div class="add-line-bar">
+          <select class="catalogue-select" id="catalogue-select" onchange="addFromCatalogue()">
+            <option value="">— Ajouter depuis le catalogue —</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="addCustomLine()">+ Ligne libre</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bas : remise + SAP + totaux -->
+    <div class="two-col">
+
+      <!-- SAP Toggle -->
+      <div class="card">
+        <div class="card-header"><h2>🏛 Service à la Personne (SAP)</h2></div>
+        <div class="card-body">
+          <div class="sap-toggle-block" id="sap-toggle-block">
+            <div class="sap-toggle-icon">🏛</div>
+            <div class="sap-toggle-text">
+              <strong>Crédit d'impôt SAP applicable</strong>
+              <span id="sap-toggle-desc">Activez pour afficher le crédit d'impôt de 50 % sur la facture.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="f-sap" onchange="onSapChange()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="sap-amount-info" id="sap-amount-info">
+            ✓ La facture affichera la mention SAP et le reste à charge réel du client.
+          </div>
+          <div style="margin-top:16px;">
+            <div class="form-group">
+              <label class="form-label">Remise globale (%)</label>
+              <input type="number" class="form-input" id="f-remise" value="0" min="0" max="100" step="1" oninput="updateTotals()" style="max-width:120px;">
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <div class="form-group">
+              <label class="form-label">Notes (internes)</label>
+              <textarea class="form-input" id="f-notes" rows="3" placeholder="Remarques, références devis, conditions particulières…" style="resize:vertical;"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Totaux -->
+      <div class="card">
+        <div class="card-header"><h2>💶 Récapitulatif</h2></div>
+        <div class="card-body">
+          <div class="totals-inner" style="width:100%;">
+            <div class="total-row">
+              <span class="lbl">Sous-total</span>
+              <span class="val" id="t-subtotal">0,00 €</span>
+            </div>
+            <div class="total-row" id="row-remise" style="display:none;">
+              <span class="lbl" id="lbl-remise">Remise (0 %)</span>
+              <span class="val" id="t-remise" style="color:var(--red);">— 0,00 €</span>
+            </div>
+            <div class="total-row separator big">
+              <span class="lbl">Total TTC</span>
+              <span class="val" id="t-total">0,00 €</span>
+            </div>
+            <div class="sap-rows" id="sap-rows" style="display:none;">
+              <div class="sap-row-line">
+                <span class="lbl">Crédit d'impôt SAP (− 50 %)</span>
+                <span class="val" id="t-sap">— 0,00 €</span>
+              </div>
+              <div class="sap-row-line net" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(37,99,235,.2);">
+                <span class="lbl">🏡 Reste à charge réel</span>
+                <span class="val" id="t-net">0,00 €</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;font-size:.75rem;color:var(--gray-400);line-height:1.6;" id="t-tva-note">
+              Facture hors TVA — Franchise en base de TVA art. 293 B du CGI.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+      <button class="btn btn-gray" onclick="showList()">← Retour à la liste</button>
+      <button class="btn btn-secondary" onclick="sendEmailFacture(currentId)">📧 Envoyer par email</button>
+      <button class="btn btn-blue" onclick="generatePDF(currentId)">⬇ Télécharger PDF</button>
+      <button class="btn btn-green" onclick="saveFactureForm()">💾 Sauvegarder</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════ CATALOGUE ════════════════════════ */
+const CATALOGUE = [
+  { label: 'Tonte pelouse (< 200 m²)',    prix: 35 },
+  { label: 'Tonte pelouse (200–500 m²)',  prix: 55 },
+  { label: 'Tonte pelouse (500–1000 m²)', prix: 80 },
+  { label: 'Tonte pelouse (> 1000 m²)',   prix: 120 },
+  { label: 'Taille haie (linéaire)',       prix: 45 },
+  { label: 'Débroussaillage',              prix: 60 },
+  { label: 'Ramassage feuilles',           prix: 40 },
+  { label: 'Entretien massifs/bordures',   prix: 35 },
+  { label: 'Désherbage manuel',            prix: 30 },
+  { label: 'Soufflage allées',             prix: 25 },
+  { label: 'Enlèvement déchets verts',     prix: 50 },
+  { label: 'Forfait visite entretien',     prix: 90 },
+];
+
+const STATUS_LABELS = { brouillon: 'Brouillon', envoyée: 'Envoyée', payée: 'Payée', annulée: 'Annulée' };
+
+const FILTERS = [
+  { key: 'tous',     label: 'Toutes' },
+  { key: 'brouillon', label: 'Brouillons' },
+  { key: 'envoyée',  label: 'Envoyées' },
+  { key: 'payée',    label: 'Payées' },
+  { key: 'annulée',  label: 'Annulées' },
+];
+
+/* ════════════════════════ STATE ════════════════════════ */
+let factureList   = JSON.parse(localStorage.getItem('at-factures') || '[]');
+let settings      = JSON.parse(localStorage.getItem('at-settings') || '{}');
+let clientsList   = JSON.parse(localStorage.getItem('at-clients')  || '[]');
+let currentId     = null;
+let currentFilter = 'tous';
+
+/* ════════════════════════ HELPERS ════════════════════════ */
+function save()  { localStorage.setItem('at-factures', JSON.stringify(factureList)); }
+function fmt(n)  { return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u202f€'; }
+function fmtPdf(n) {
+  return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    .replace(/[\u202f\u00a0]/g, ' ') + ' EUR';
+}
+function today()    { return new Date().toISOString().slice(0, 10); }
+function addDays(d, n) { const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().slice(0, 10); }
+function fmtDate(s) { if (!s) return '—'; const [y,m,d] = s.split('-'); return `${d}/${m}/${y}`; }
+function esc(str)   { return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function nextId() {
+  const y    = new Date().getFullYear();
+  const nums = factureList.map(f => { const p = f.id.split('-'); return parseInt(p[2]) || 0; });
+  const max  = nums.length ? Math.max(...nums) : 0;
+  return `FAC-${y}-${String(max + 1).padStart(3, '0')}`;
+}
+
+function showToast(msg, ms = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ════════════════════════ LIST VIEW ════════════════════════ */
+function showList() {
+  document.getElementById('view-list').classList.add('active');
+  document.getElementById('view-edit').classList.remove('active');
+  currentId = null;
+  renderStats();
+  renderFilterBar();
+  renderList();
+}
+
+function renderStats() {
+  const total   = factureList.length;
+  const payees  = factureList.filter(f => f.status === 'payée');
+  const ca      = payees.reduce((s, f) => s + (f.total || 0), 0);
+  const en_att  = factureList.filter(f => f.status === 'envoyée').length;
+  const brouill = factureList.filter(f => f.status === 'brouillon').length;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total factures</div>
+      <div class="stat-val">${total}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">CA encaissé</div>
+      <div class="stat-val">${fmt(ca)}</div>
+      <div class="stat-sub">factures payées</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">En attente</div>
+      <div class="stat-val">${en_att}</div>
+      <div class="stat-sub">envoyées non payées</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Brouillons</div>
+      <div class="stat-val">${brouill}</div>
+    </div>
+  `;
+}
+
+function renderFilterBar() {
+  const bar   = document.getElementById('filter-bar');
+  const input = document.getElementById('search-input');
+  const tabs  = FILTERS.map(f => {
+    const count = f.key === 'tous' ? factureList.length : factureList.filter(x => x.status === f.key).length;
+    return `<button class="filter-tab ${f.key === currentFilter ? 'active' : ''}" onclick="setFilter('${f.key}')">${f.label} <span style="opacity:.6;font-size:.72rem;">(${count})</span></button>`;
+  }).join('');
+  bar.innerHTML = tabs +
+    `<div class="filter-spacer"></div>` +
+    `<input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher…" oninput="renderList()" value="${esc(input ? input.value : '')}">`;
+}
+
+function setFilter(key) { currentFilter = key; renderFilterBar(); renderList(); }
+
+function renderList() {
+  const q    = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let list   = factureList.slice().reverse();
+  if (currentFilter !== 'tous') list = list.filter(f => f.status === currentFilter);
+  if (q) list = list.filter(f =>
+    `${f.client.prenom} ${f.client.nom}`.toLowerCase().includes(q) ||
+    f.id.toLowerCase().includes(q) ||
+    (f.client.ville || '').toLowerCase().includes(q)
+  );
+
+  const el = document.getElementById('list-body');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧾</div><p>Aucune facture trouvée.<br><a href="#" onclick="newFacture();return false;">Créer une nouvelle facture</a></p></div>`;
+    return;
+  }
+
+  el.innerHTML = `<table class="facture-table">
+    <thead><tr>
+      <th>N°</th><th>Client</th><th>Ville</th><th>Date</th><th>Échéance</th><th>Montant</th><th>SAP</th><th>Statut</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${list.map(f => {
+      const overdue = f.status === 'envoyée' && f.echeance && f.echeance < today();
+      return `<tr onclick="editFacture('${f.id}')">
+        <td><strong>${esc(f.id)}</strong></td>
+        <td>${esc(f.client.prenom||'')} ${esc(f.client.nom||'')}</td>
+        <td style="color:var(--gray-500);">${esc(f.client.ville||'—')}</td>
+        <td style="color:var(--gray-500);">${fmtDate(f.date)}</td>
+        <td style="color:${overdue?'var(--red)':'var(--gray-500)'};">${fmtDate(f.echeance)}${overdue?' ⚠️':''}</td>
+        <td><strong>${fmt(f.total||0)}</strong></td>
+        <td>${f.sap ? '<span class="sap-badge sap-on">🏛 SAP</span>' : '<span class="sap-badge sap-off">Non</span>'}</td>
+        <td><span class="status-badge status-${f.status}">${STATUS_LABELS[f.status]||f.status}</span></td>
+        <td onclick="event.stopPropagation()">
+          <div class="tbl-actions">
+            <button class="action-btn pdf"   onclick="generatePDF('${f.id}')">⬇ PDF</button>
+            <button class="action-btn email" onclick="sendEmailFacture('${f.id}')">📧</button>
+            <button class="action-btn danger" onclick="confirmDelete('${f.id}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+}
+
+/* ════════════════════════ NEW ════════════════════════ */
+function newFacture() {
+  const id = nextId();
+  const f  = {
+    id,
+    date:     today(),
+    echeance: addDays(today(), 30),
+    status:   'brouillon',
+    client:   { prenom: '', nom: '', adresse: '', cp: '', ville: '', email: '', tel: '' },
+    lignes:   [],
+    remise:   0,
+    sap:      true,
+    notes:    '',
+    total:    0,
+  };
+  factureList.push(f);
+  save();
+  editFacture(id);
+}
+
+/* ════════════════════════ EDIT ════════════════════════ */
+function editFacture(id) {
+  const f = factureList.find(x => x.id === id);
+  if (!f) return;
+  currentId = id;
+
+  document.getElementById('view-list').classList.remove('active');
+  document.getElementById('view-edit').classList.add('active');
+
+  document.getElementById('edit-title').textContent = f.id;
+  document.getElementById('edit-badge').innerHTML   = `<span class="status-badge status-${f.status}">${STATUS_LABELS[f.status]}</span>`;
+
+  document.getElementById('f-id').value       = f.id;
+  document.getElementById('f-status').value   = f.status;
+  document.getElementById('f-date').value     = f.date     || today();
+  document.getElementById('f-echeance').value = f.echeance || addDays(today(), 30);
+  document.getElementById('f-prenom').value   = f.client.prenom  || '';
+  document.getElementById('f-nom').value      = f.client.nom     || '';
+  document.getElementById('f-adresse').value  = f.client.adresse || '';
+  document.getElementById('f-cp').value       = f.client.cp      || '';
+  document.getElementById('f-ville').value    = f.client.ville   || '';
+  document.getElementById('f-email').value    = f.client.email   || '';
+  document.getElementById('f-tel').value      = f.client.tel     || '';
+  document.getElementById('f-remise').value   = f.remise || 0;
+  document.getElementById('f-sap').checked    = f.sap !== false;
+  document.getElementById('f-notes').value    = f.notes || '';
+
+  document.getElementById('btn-delete').style.display    = 'inline-flex';
+  document.getElementById('btn-duplicate').style.display = 'inline-flex';
+
+  // Populate catalogue
+  document.getElementById('catalogue-select').innerHTML =
+    '<option value="">— Ajouter depuis le catalogue —</option>' +
+    CATALOGUE.map((c, i) => `<option value="${i}">${c.label} — ${fmt(c.prix)}</option>`).join('');
+
+  // Populate clients
+  populateClientQuick();
+
+  onSapChange();
+  renderLines();
+  updateTotals();
+}
+
+function populateClientQuick() {
+  const sel = document.getElementById('client-quick');
+  sel.innerHTML = '<option value="">— Importer client —</option>' +
+    clientsList.map((c, i) => `<option value="${i}">${c.prenom||''} ${c.nom||''} — ${c.ville||''}</option>`).join('');
+}
+
+function loadClientQuick() {
+  const sel = document.getElementById('client-quick');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx) || idx < 0) return;
+  const c = clientsList[idx];
+  if (!c) return;
+  document.getElementById('f-prenom').value  = c.prenom  || '';
+  document.getElementById('f-nom').value     = c.nom     || '';
+  document.getElementById('f-adresse').value = c.adresse || '';
+  document.getElementById('f-cp').value      = c.cp      || '';
+  document.getElementById('f-ville').value   = c.ville   || '';
+  document.getElementById('f-email').value   = c.email   || '';
+  document.getElementById('f-tel').value     = c.tel     || '';
+  sel.value = '';
+  showToast('✓ Client importé');
+}
+
+/* ════════════════════════ SAP TOGGLE ════════════════════════ */
+function onSapChange() {
+  const checked = document.getElementById('f-sap').checked;
+  const block   = document.getElementById('sap-toggle-block');
+  const desc    = document.getElementById('sap-toggle-desc');
+  if (checked) {
+    block.classList.add('sap-active');
+    desc.textContent = 'Le crédit d\'impôt de 50 % sera affiché sur la facture PDF.';
+  } else {
+    block.classList.remove('sap-active');
+    desc.textContent = 'Activez pour afficher le crédit d\'impôt de 50 % sur la facture.';
+  }
+  updateTotals();
+}
+
+function onStatusChange() {
+  const s = document.getElementById('f-status').value;
+  document.getElementById('edit-badge').innerHTML = `<span class="status-badge status-${s}">${STATUS_LABELS[s]}</span>`;
+}
+
+/* ════════════════════════ LINES ════════════════════════ */
+function getF() { return factureList.find(x => x.id === currentId); }
+
+function renderLines() {
+  const f     = getF();
+  const tbody = document.getElementById('lines-body');
+  if (!f || !f.lignes.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:22px;color:var(--gray-300);font-size:.85rem;">Aucune prestation — ajoutez depuis le catalogue ou en ligne libre.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = f.lignes.map((l, i) => `
+    <tr>
+      <td class="col-desc"><input type="text" value="${esc(l.desc)}" oninput="updateLine(${i},'desc',this.value)" placeholder="Description…"></td>
+      <td class="col-qty"><input type="number" value="${l.qty}" min="0" step="0.5" oninput="updateLine(${i},'qty',this.value)" style="text-align:right;"></td>
+      <td class="col-pu"><input type="number" value="${l.pu}" min="0" step="0.5" oninput="updateLine(${i},'pu',this.value)" style="text-align:right;"></td>
+      <td class="col-total">${fmt(l.qty * l.pu)}</td>
+      <td class="col-del"><button class="del-line-btn" onclick="removeLine(${i})" title="Supprimer">✕</button></td>
+    </tr>`).join('');
+}
+
+function updateLine(i, key, val) {
+  const f = getF(); if (!f) return;
+  if (key === 'qty' || key === 'pu') f.lignes[i][key] = parseFloat(val) || 0;
+  else f.lignes[i][key] = val;
+  const rows = document.querySelectorAll('#lines-body tr');
+  if (rows[i]) { const c = rows[i].querySelector('.col-total'); if (c) c.textContent = fmt(f.lignes[i].qty * f.lignes[i].pu); }
+  save();
+  updateTotals();
+}
+
+function addFromCatalogue() {
+  const sel = document.getElementById('catalogue-select');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx) || idx < 0) return;
+  const f = getF(); if (!f) return;
+  f.lignes.push({ desc: CATALOGUE[idx].label, qty: 1, pu: CATALOGUE[idx].prix });
+  save(); sel.value = ''; renderLines(); updateTotals();
+}
+
+function addCustomLine() {
+  const f = getF(); if (!f) return;
+  f.lignes.push({ desc: '', qty: 1, pu: 0 });
+  save(); renderLines(); updateTotals();
+}
+
+function removeLine(i) {
+  const f = getF(); if (!f) return;
+  f.lignes.splice(i, 1);
+  save(); renderLines(); updateTotals();
+}
+
+/* ════════════════════════ TOTALS ════════════════════════ */
+function updateTotals() {
+  const f       = getF(); if (!f) return;
+  const subtotal = f.lignes.reduce((s, l) => s + l.qty * l.pu, 0);
+  const remise   = parseFloat(document.getElementById('f-remise')?.value) || 0;
+  const remiseAmt = subtotal * remise / 100;
+  const total    = subtotal - remiseAmt;
+  const sap      = document.getElementById('f-sap')?.checked;
+  f.total        = total;
+
+  document.getElementById('t-subtotal').textContent = fmt(subtotal);
+
+  const rowRemise = document.getElementById('row-remise');
+  if (remise > 0) {
+    rowRemise.style.display = '';
+    document.getElementById('lbl-remise').textContent = `Remise (${remise} %)`;
+    document.getElementById('t-remise').textContent   = `— ${fmt(remiseAmt)}`;
+  } else {
+    rowRemise.style.display = 'none';
+  }
+
+  document.getElementById('t-total').textContent = fmt(total);
+  document.getElementById('t-sap').textContent   = `— ${fmt(total / 2)}`;
+  document.getElementById('t-net').textContent   = fmt(total / 2);
+
+  const sapRows = document.getElementById('sap-rows');
+  if (sapRows) sapRows.style.display = sap ? '' : 'none';
+
+  const sapInfo = document.getElementById('sap-amount-info');
+  if (sapInfo && sap) {
+    sapInfo.textContent = `✓ Reste à charge réel pour le client : ${fmt(total / 2)} (après crédit d'impôt 50 %)`;
+  }
+
+  save();
+}
+
+/* ════════════════════════ SAVE FORM ════════════════════════ */
+function saveFactureForm() {
+  const f = getF(); if (!f) return;
+  f.client.prenom  = document.getElementById('f-prenom').value.trim();
+  f.client.nom     = document.getElementById('f-nom').value.trim();
+  f.client.adresse = document.getElementById('f-adresse').value.trim();
+  f.client.cp      = document.getElementById('f-cp').value.trim();
+  f.client.ville   = document.getElementById('f-ville').value.trim();
+  f.client.email   = document.getElementById('f-email').value.trim();
+  f.client.tel     = document.getElementById('f-tel').value.trim();
+  f.status         = document.getElementById('f-status').value;
+  f.date           = document.getElementById('f-date').value;
+  f.echeance       = document.getElementById('f-echeance').value;
+  f.remise         = parseFloat(document.getElementById('f-remise').value) || 0;
+  f.sap            = document.getElementById('f-sap').checked;
+  f.notes          = document.getElementById('f-notes').value.trim();
+  updateTotals();
+  save();
+  document.getElementById('edit-badge').innerHTML = `<span class="status-badge status-${f.status}">${STATUS_LABELS[f.status]}</span>`;
+  showToast('✓ Facture sauvegardée');
+}
+
+/* ════════════════════════ DELETE / DUPLICATE ════════════════════════ */
+function deleteCurrentFacture() {
+  if (!currentId) return;
+  if (!confirm(`Supprimer définitivement la facture ${currentId} ?`)) return;
+  factureList = factureList.filter(f => f.id !== currentId);
+  save(); showList();
+}
+
+function confirmDelete(id) {
+  if (!confirm(`Supprimer définitivement la facture ${id} ?`)) return;
+  factureList = factureList.filter(f => f.id !== id);
+  save(); renderStats(); renderFilterBar(); renderList();
+}
+
+function duplicateCurrentFacture() {
+  saveFactureForm();
+  const orig = getF(); if (!orig) return;
+  const copy = JSON.parse(JSON.stringify(orig));
+  copy.id       = nextId();
+  copy.date     = today();
+  copy.echeance = addDays(today(), 30);
+  copy.status   = 'brouillon';
+  factureList.push(copy);
+  save();
+  editFacture(copy.id);
+  showToast('⧉ Facture dupliquée');
+}
+
+/* ════════════════════════ EMAIL ════════════════════════ */
+function sendEmailFacture(id) {
+  saveFactureForm();
+  const f = factureList.find(x => x.id === id); if (!f) return;
+  const subj = encodeURIComponent(`Facture Allo Tonte — ${f.id}`);
+  const body = encodeURIComponent(
+    `Bonjour ${f.client.prenom},\n\n` +
+    `Veuillez trouver ci-joint votre facture ${f.id} d'un montant de ${fmt(f.total)}.\n` +
+    (f.sap
+      ? `\nGrâce au crédit d'impôt SAP (50 %), votre reste à charge réel est de seulement ${fmt(f.total / 2)}.\n`
+      : '') +
+    `\nDate d'échéance : ${fmtDate(f.echeance)}.\n\n` +
+    `Règlement par virement, chèque ou espèces.\n\n` +
+    `Cordialement,\n${settings.nom || 'Allo Tonte'}\n${settings.tel || '07 56 95 15 66'}`
+  );
+  const to = f.client.email ? encodeURIComponent(f.client.email) : '';
+  window.location.href = `mailto:${to}?subject=${subj}&body=${body}`;
+  f.status = 'envoyée'; save();
+  const fs = document.getElementById('f-status');
+  if (fs) {
+    fs.value = 'envoyée';
+    document.getElementById('edit-badge').innerHTML = `<span class="status-badge status-envoyée">Envoyée</span>`;
+  }
+}
+
+/* ════════════════════════ PDF ════════════════════════ */
+async function generatePDF(id) {
+  saveFactureForm();
+  const f = factureList.find(x => x.id === id); if (!f) return;
+  showToast('⏳ Génération du PDF…', 4000);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, M = 18, CW = W - M * 2;
+  const s = settings;
+  let y = M;
+
+  const GD = [21,61,7];  const GM = [30,92,10]; const GL = [74,158,37];
+  const GP = [232,245,224]; const GR = [229,231,235]; const GS = [249,250,251];
+  const BD = [29,58,146]; const BP = [239,246,255];
+  const TD = [26,26,26]; const TG = [107,114,128];
+
+  const colW = (CW - 8) / 2;
+  const rX   = M + colW + 8;
+
+  /* Logo */
+  try {
+    const b64 = await imgToBase64('allotonte-removebg-preview.png');
+    if (b64) doc.addImage(b64, 'PNG', M, y, 42, 17);
+  } catch(e) {}
+
+  /* Méta facture (droite) */
+  const meta = [
+    ['Facture n°', f.id],
+    ['Date', fmtDate(f.date)],
+    ['Échéance', fmtDate(f.echeance)],
+    ['Statut', STATUS_LABELS[f.status] || f.status],
+  ];
+  meta.forEach(([lbl, val], i) => {
+    const ry = y + 3 + i * 5.5;
+    doc.setFontSize(7.5); doc.setFont(undefined, 'normal'); doc.setTextColor(...TG);
+    doc.text(lbl + ' :', W - M - 32, ry);
+    doc.setFont(undefined, 'bold'); doc.setTextColor(...TD);
+    doc.text(val, W - M, ry, { align: 'right' });
+  });
+  y += 26;
+
+  /* Ligne verte */
+  doc.setDrawColor(...GD); doc.setLineWidth(0.8);
+  doc.line(M, y, W - M, y); y += 9;
+
+  /* Titre */
+  doc.setFont(undefined, 'bold'); doc.setFontSize(14); doc.setTextColor(...GD);
+  doc.text('FACTURE — ENTRETIEN DE JARDIN', W / 2, y, { align: 'center' });
+  y += 5.5;
+  doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(...TG);
+  doc.text('Etablie par voie numerique — Franchise en base de TVA art. 293 B du CGI', W / 2, y, { align: 'center' });
+  y += 11;
+
+  /* Boxes prestataire / client */
+  const boxH = 40;
+
+  doc.setFillColor(...GP); doc.setDrawColor(...GL); doc.setLineWidth(0.4);
+  doc.roundedRect(M, y, colW, boxH, 2.5, 2.5, 'FD');
+  doc.setFontSize(6.5); doc.setFont(undefined, 'bold'); doc.setTextColor(...GM);
+  doc.text('LE PRESTATAIRE', M + 4, y + 5.5);
+  const pLines = [
+    ['Nom',    s.nom    || 'Allo Tonte'],
+    ['Adresse', s.adresse || 'Hermonville 51220'],
+    ['Tel.',   s.tel    || '07 56 95 15 66'],
+    ['SIRET',  s.siret  || ''],
+  ];
+  pLines.forEach(([lbl, val], i) => {
+    if (!val) return;
+    doc.setFontSize(7); doc.setFont(undefined, 'normal'); doc.setTextColor(...TG);
+    doc.text(lbl + ' :', M + 4, y + 12 + i * 6.2);
+    doc.setFont(undefined, 'bold'); doc.setTextColor(...TD);
+    doc.text(val, M + 21, y + 12 + i * 6.2);
+  });
+  if (f.sap && s.sap) {
+    doc.setFontSize(6.5); doc.setFont(undefined, 'normal'); doc.setTextColor(...GL);
+    doc.text('N° SAP : ' + s.sap, M + 4, y + 38);
+  }
+
+  doc.setFillColor(...GS); doc.setDrawColor(...GR); doc.setLineWidth(0.4);
+  doc.roundedRect(rX, y, colW, boxH, 2.5, 2.5, 'FD');
+  doc.setFontSize(6.5); doc.setFont(undefined, 'bold'); doc.setTextColor(...TG);
+  doc.text('LE CLIENT', rX + 4, y + 5.5);
+  const clientNom = ((f.client.prenom || '') + ' ' + (f.client.nom || '')).trim();
+  const clientAdr = [f.client.adresse, f.client.cp, f.client.ville].filter(Boolean).join(' ');
+  [['Nom', clientNom], ['Adresse', clientAdr], ['Tel.', f.client.tel || ''], ['Email', f.client.email || '']]
+    .forEach(([lbl, val], i) => {
+      if (!val) return;
+      doc.setFontSize(7); doc.setFont(undefined, 'normal'); doc.setTextColor(...TG);
+      doc.text(lbl + ' :', rX + 4, y + 12 + i * 6.2);
+      doc.setFont(undefined, 'bold'); doc.setTextColor(...TD);
+      const v = doc.splitTextToSize(val, colW - 26);
+      doc.text(v[0] || '', rX + 22, y + 12 + i * 6.2);
+    });
+  y += boxH + 9;
+
+  /* Titre prestations */
+  doc.setFontSize(7); doc.setFont(undefined, 'bold'); doc.setTextColor(...GM);
+  doc.text('DETAIL DES PRESTATIONS', M, y);
+  doc.setDrawColor(...GP); doc.setLineWidth(2);
+  doc.line(M, y + 2, W - M, y + 2); y += 8;
+
+  /* Tableau */
+  doc.autoTable({
+    startY: y,
+    head: [['Prestation', 'Qte', 'P.U. (EUR)', 'Total (EUR)']],
+    body: f.lignes.map(l => [
+      l.desc,
+      l.qty % 1 === 0 ? String(l.qty) : l.qty.toLocaleString('fr-FR'),
+      fmtPdf(l.pu),
+      fmtPdf(l.qty * l.pu)
+    ]),
+    margin: { left: M, right: M },
+    headStyles: { fillColor: GP, textColor: GD, fontStyle: 'bold', fontSize: 7.5, lineColor: GL, lineWidth: 0.3 },
+    bodyStyles: { fontSize: 8.5, textColor: TD, lineColor: GR, lineWidth: 0.2 },
+    alternateRowStyles: { fillColor: [255, 255, 255] },
+    columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 14, halign: 'center' }, 2: { cellWidth: 28, halign: 'right' }, 3: { cellWidth: 28, halign: 'right', fontStyle: 'bold' } },
+    tableLineColor: GR, tableLineWidth: 0.2,
+  });
+  y = doc.lastAutoTable.finalY + 5;
+
+  const sub     = f.lignes.reduce((acc, l) => acc + l.qty * l.pu, 0);
+  const remAmt  = sub * (f.remise || 0) / 100;
+  const total   = sub - remAmt;
+
+  /* Sous-total si remise */
+  if (f.remise > 0) {
+    const stX = W - M - 76;
+    doc.setFillColor(255,255,255); doc.setDrawColor(...GR); doc.setLineWidth(0.2);
+    doc.rect(stX, y, 76, 7);
+    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.setTextColor(...TD);
+    doc.text('Sous-total', stX + 3, y + 4.8);
+    doc.text(fmtPdf(sub), W - M - 3, y + 4.8, { align: 'right' }); y += 7;
+    doc.setFillColor(255,255,255); doc.rect(stX, y, 76, 7);
+    doc.setTextColor(192, 57, 43);
+    doc.text('Remise ' + f.remise + ' %', stX + 3, y + 4.8);
+    doc.text('- ' + fmtPdf(remAmt), W - M - 3, y + 4.8, { align: 'right' }); y += 7;
+  }
+
+  /* Récap total */
+  const sapH   = f.sap ? 22 : 0;
+  const recapW = 97, recapX = W - M - recapW;
+  const recapH = 14 + sapH;
+  doc.setFillColor(...GP); doc.setDrawColor(...GL); doc.setLineWidth(0.5);
+  doc.roundedRect(recapX, y, recapW, recapH, 2, 2, 'FD');
+  doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.setTextColor(...GM);
+  doc.text('Total facture TTC', recapX + 5, y + 6);
+  doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.setTextColor(...GD);
+  doc.text(fmtPdf(total), W - M - 4, y + 7.5, { align: 'right' });
+  if (f.sap) {
+    doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(...GL);
+    doc.text("Credit d'impot SAP (- 50 %) : " + fmtPdf(total / 2) + " reels", recapX + 5, y + 14);
+    doc.setFontSize(8.5); doc.setFont(undefined,'bold'); doc.setTextColor(21, 61, 7);
+    doc.text('Reste a charge client : ' + fmtPdf(total / 2), recapX + 5, y + 20);
+  }
+  y += recapH + 8;
+
+  /* Mention TVA */
+  doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+  doc.text('TVA non applicable — art. 293 B du CGI (franchise en base).', M, y); y += 6;
+
+  /* Bloc SAP */
+  if (f.sap) {
+    const sapTxt = [
+      "SERVICES A LA PERSONNE — CREDIT D'IMPOT",
+      "Ce prestataire est agréé / déclaré Services à la Personne (SAP).",
+      "En application de l'article 199 sexdecies du CGI, les dépenses de services à la personne",
+      "ouvrent droit à un crédit / réduction d'impôt de 50 % des sommes versées.",
+      s.sap ? "N° déclaration SAP : " + s.sap : null,
+      "Conservez cette facture pour votre déclaration de revenus (case 7DB / 7DF).",
+    ].filter(Boolean);
+    const sapBoxH = sapTxt.length * 4.8 + 10;
+    doc.setFillColor(...BP); doc.setDrawColor(...BD); doc.setLineWidth(0.5);
+    doc.roundedRect(M, y, CW, sapBoxH, 2, 2, 'FD');
+    doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...BD);
+    doc.text(sapTxt[0], M + 5, y + 6);
+    doc.setFont(undefined,'normal'); doc.setTextColor(55,65,81);
+    sapTxt.slice(1).forEach((l, i) => doc.text(l, M + 5, y + 6 + (i + 1) * 4.8));
+    y += sapBoxH + 8;
+  }
+
+  /* Notes */
+  if (f.notes) {
+    doc.setFontSize(7.5); doc.setFont(undefined,'bold'); doc.setTextColor(...TG);
+    doc.text('Notes :', M, y); y += 4;
+    doc.setFont(undefined,'normal');
+    const nl = doc.splitTextToSize(f.notes, CW);
+    doc.text(nl, M, y); y += nl.length * 4.5 + 6;
+  }
+
+  /* Conditions de règlement */
+  const condTxt = 'Conditions de règlement : Paiement à réception de facture, au plus tard le ' + fmtDate(f.echeance) + '. ' +
+    'Règlement par virement, chèque ou espèces. Tout retard de paiement entraîne des pénalités de 3× le taux légal.';
+  const condLines = doc.splitTextToSize(condTxt, CW - 8);
+  const condH = condLines.length * 4.2 + 8;
+  doc.setFillColor(...GS); doc.setDrawColor(...GR); doc.setLineWidth(0.3);
+  doc.roundedRect(M, y, CW, condH, 2, 2, 'FD');
+  doc.setFontSize(7.5); doc.setFont(undefined,'normal'); doc.setTextColor(...TG);
+  condLines.forEach((l, i) => doc.text(l, M + 4, y + 5.5 + i * 4.2));
+  y += condH + 8;
+
+  /* IBAN */
+  if (s.iban) {
+    doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(...GD);
+    doc.text('Règlement par virement — IBAN : ' + s.iban, M, y); y += 6;
+  }
+
+  /* Footer */
+  doc.setDrawColor(...GR); doc.setLineWidth(0.3);
+  doc.line(M, 282, W - M, 282);
+  doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(160, 160, 160);
+  const fp = [s.nom || 'Allo Tonte', s.adresse || 'Hermonville 51220', s.tel || '', s.siret ? 'SIRET ' + s.siret : ''].filter(Boolean);
+  doc.text(fp.join('  ·  '), W / 2, 287, { align: 'center' });
+
+  const fname = 'Facture-' + f.id + '-' + (f.client.nom || 'client').replace(/\s+/g, '_') + '.pdf';
+  doc.save(fname);
+  showToast('✓ PDF généré : ' + fname);
+}
+
+async function imgToBase64(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+/* ════════════════════════ CSV ════════════════════════ */
+function exportCSV() {
+  const sep = ';';
+  const rows = [
+    ['N°', 'Date', 'Échéance', 'Client', 'Adresse', 'Ville', 'Email', 'Tél', 'Statut', 'Total (€)', 'SAP'],
+    ...factureList.map(f => [
+      f.id, f.date || '', f.echeance || '',
+      `${f.client.prenom || ''} ${f.client.nom || ''}`.trim(),
+      f.client.adresse || '', f.client.ville || '', f.client.email || '', f.client.tel || '',
+      STATUS_LABELS[f.status] || f.status,
+      (f.total || 0).toFixed(2).replace('.', ','),
+      f.sap ? 'Oui' : 'Non',
+    ])
+  ];
+  const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(sep)).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a'); a.href = url;
+  a.download = `factures-allotonte-${today()}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ CSV exporté');
+}
+
+/* ════════════════════════ INIT ════════════════════════ */
+showList();
+// Si l'URL contient ?id=FAC-..., ouvrir l'édition de cette facture
+(function openFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const openId = params.get('id');
+    if (openId) {
+      // petit délai pour s'assurer que l'initialisation DOM est complète
+      setTimeout(() => { editFacture(openId); }, 50);
+    }
+  } catch (e) { /* ignore */ }
+})();
+</script>
+</body>
+</html>
